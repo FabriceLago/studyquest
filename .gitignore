@@ -1,0 +1,5 @@
+node_modules/
+.env
+experiments/model-test/cours/
+experiments/model-test/resultats/
+experiments/model-test/relecture/

@@ -1,0 +1,20 @@
+{
+  "name": "studyquest-model-test",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"src/*.test.ts\"",
+    "check": "tsc --noEmit",
+    "essai": "node --env-file-if-exists=.env src/run.ts",
+    "relecture": "node src/review.ts",
+    "rapport": "node src/report.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
+  }
+}
