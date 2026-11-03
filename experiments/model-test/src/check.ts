@@ -10,6 +10,8 @@ export function normalize(text: string): string {
     .replace(/[’ʼ‘]/g, "'")
     .replace(/[«»“”]/g, '"')
     .replace(/\s+/g, " ")
+    // Les PDF laissent des espaces parasites : « d' ADN », « c'est- à-dire ».
+    .replace(/\s*(['-])\s*/g, "$1")
     .trim();
 }
 

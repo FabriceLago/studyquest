@@ -28,6 +28,11 @@ test("normalize ignore la casse, les espaces et les apostrophes typographiques",
   assert.equal(normalize("  L’Énergie\n de   la  CELLULE "), "l'énergie de la cellule");
 });
 
+test("normalize ignore les espaces parasites des PDF autour des apostrophes et des traits d'union", () => {
+  assert.equal(normalize("molécules d' ADN"), normalize("molécules d'ADN"));
+  assert.equal(normalize("c'est- à-dire"), normalize("c'est-à-dire"));
+});
+
 test("un extrait présent malgré les différences de forme est retenu", () => {
   const f = filterGeneration(generation([question()]), COURS);
   assert.equal(f.retenues, 1);
