@@ -1,0 +1,140 @@
+<h1>{{ signup() ? 'Créer mon compte' : 'Me connecter' }}</h1>
+
+@if (auth.user(); as user) {
+  <section class="bloc" aria-labelledby="session-ouverte">
+    <h2 id="session-ouverte">Session déjà ouverte</h2>
+    <p>Ta session est ouverte avec l’adresse {{ user.email }}.</p>
+    <a class="btn btn-primary" routerLink="/">Aller à ma journée</a>
+  </section>
+} @else if (confirmationSent()) {
+  <section class="bloc" role="status" aria-labelledby="confirmation">
+    <h2 id="confirmation">Vérifie ta boîte de réception</h2>
+    <p>Un message de confirmation a été envoyé à {{ email() }}. Ouvre le lien qu’il contient.</p>
+    <p class="hint">Rien reçu après quelques minutes ? Regarde dans les courriers indésirables, ou demande un nouveau message.</p>
+    <sq-captcha />
+    <button type="button" class="btn btn-secondary" (click)="resend()">
+      {{ pending() ? 'Patiente…' : 'Renvoyer le message' }}
+    </button>
+    <p role="status" class="hint">{{ resendMessage() }}</p>
+  </section>
+} @else {
+  <form class="form" novalidate (submit)="submit($event)">
+    @if (errors().length > 0) {
+      <div #summary class="error-summary" role="alert" tabindex="-1" aria-labelledby="erreurs-titre">
+        <h2 id="erreurs-titre">
+          {{ serverError() && errors().length === 1 ? 'La demande n’a pas abouti' : 'À corriger' }}
+        </h2>
+        <ul>
+          @for (error of errors(); track error.text) {
+            <li>
+              @if (error.field; as field) {
+                <a [href]="'#' + field" (click)="focusField($event, field)">{{ error.text }}</a>
+              } @else {
+                {{ error.text }}
+              }
+            </li>
+          }
+        </ul>
+        @if (unconfirmed()) {
+          <button type="button" class="btn btn-secondary" (click)="resend()">Renvoyer le message de confirmation</button>
+          <p role="status" class="hint">{{ resendMessage() }}</p>
+        }
+      </div>
+    }
+
+    @if (signup()) {
+      <div class="field">
+        <label for="pseudo">Pseudo</label>
+        <p id="pseudo-aide" class="hint">Visible par les membres de tes groupes.</p>
+        <input
+          #pseudoInput
+          id="pseudo"
+          type="text"
+          autocomplete="nickname"
+          maxlength="30"
+          [value]="pseudo()"
+          (input)="pseudo.set(pseudoInput.value)"
+          [attr.aria-invalid]="fieldErrors().pseudo ? true : null"
+          [attr.aria-describedby]="fieldErrors().pseudo ? 'pseudo-aide pseudo-erreur' : 'pseudo-aide'"
+        />
+        @if (fieldErrors().pseudo; as message) {
+          <p id="pseudo-erreur" class="field-error">{{ message }}</p>
+        }
+      </div>
+    }
+
+    <div class="field">
+      <label for="email">Adresse e-mail</label>
+      <input
+        #emailInput
+        id="email"
+        type="email"
+        autocomplete="email"
+        spellcheck="false"
+        [value]="email()"
+        (input)="email.set(emailInput.value)"
+        [attr.aria-invalid]="fieldErrors().email ? true : null"
+        [attr.aria-describedby]="fieldErrors().email ? 'email-erreur' : null"
+      />
+      @if (fieldErrors().email; as message) {
+        <p id="email-erreur" class="field-error">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="mot-de-passe">Mot de passe</label>
+      @if (signup()) {
+        <p id="mot-de-passe-aide" class="hint">Au moins 10 caractères. Une phrase de plusieurs mots est plus sûre et plus facile à retenir.</p>
+      }
+      <input
+        #passwordInput
+        id="mot-de-passe"
+        [type]="showPassword() ? 'text' : 'password'"
+        [attr.autocomplete]="signup() ? 'new-password' : 'current-password'"
+        [value]="password()"
+        (input)="password.set(passwordInput.value)"
+        [attr.aria-invalid]="fieldErrors()['mot-de-passe'] ? true : null"
+        [attr.aria-describedby]="passwordDescription()"
+      />
+      @if (fieldErrors()['mot-de-passe']; as message) {
+        <p id="mot-de-passe-erreur" class="field-error">{{ message }}</p>
+      }
+      <label class="case">
+        <input type="checkbox" [checked]="showPassword()" (change)="showPassword.set(!showPassword())" />
+        Afficher le mot de passe
+      </label>
+    </div>
+
+    @if (signup()) {
+      <div class="field">
+        <label class="case">
+          <input
+            id="age"
+            type="checkbox"
+            [checked]="age()"
+            (change)="age.set(!age())"
+            [attr.aria-invalid]="fieldErrors().age ? true : null"
+            [attr.aria-describedby]="fieldErrors().age ? 'age-erreur' : null"
+          />
+          J’ai 15 ans ou plus
+        </label>
+        @if (fieldErrors().age; as message) {
+          <p id="age-erreur" class="field-error">{{ message }}</p>
+        }
+      </div>
+    }
+
+    <sq-captcha />
+    <button type="submit" class="btn btn-primary">
+      {{ pending() ? 'Patiente…' : signup() ? 'Créer mon compte' : 'Me connecter' }}
+    </button>
+
+    <p>
+      @if (signup()) {
+        Déjà un compte ? <a routerLink="/connexion">Me connecter</a>
+      } @else {
+        Pas encore de compte ? <a routerLink="/inscription">Créer mon compte</a>
+      }
+    </p>
+  </form>
+}

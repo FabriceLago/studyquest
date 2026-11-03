@@ -1,0 +1,203 @@
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+@import '@fontsource-variable/bricolage-grotesque/index.css';
+
+:root {
+  --nuit: #12162a;
+  --nuit2: #1b2040;
+  --nuit3: #2a2f55;
+  --ligne: #454b7c;
+  --papier: #f7f1e3;
+  --brume: #c2c6dc;
+  --ambre: #ffc35c;
+  --menthe: #5fdcb5;
+  --corail: #ff9682;
+  --color-danger: var(--corail);
+  --text-sm: 0.875rem;
+  --titre: 'Bricolage Grotesque Variable', 'Segoe UI', system-ui, sans-serif;
+  --texte: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--nuit);
+  color: var(--papier);
+  font: 400 1rem/1.45 var(--texte);
+}
+
+:focus-visible {
+  outline: 3px solid var(--ambre);
+  outline-offset: 2px;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-family: var(--titre);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: 1.65rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--ambre);
+}
+
+.barre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 480px;
+  margin: auto;
+  padding: 12px 16px;
+}
+
+.marque {
+  font: 700 1.1rem var(--titre);
+  color: var(--papier);
+  text-decoration: none;
+}
+
+.barre nav {
+  display: flex;
+  gap: 16px;
+}
+
+.barre nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--brume);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.barre nav a.actif {
+  color: var(--ambre);
+}
+
+main {
+  max-width: 480px;
+  margin: auto;
+  padding: 8px 16px 48px;
+}
+
+.intro {
+  margin-top: 6px;
+  color: var(--brume);
+}
+
+.form,
+.bloc {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > label {
+  font-weight: 700;
+}
+
+.field input[type='text'],
+.field input[type='email'],
+.field input[type='password'] {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 2px solid var(--ligne);
+  border-radius: 10px;
+  background: var(--nuit2);
+  color: var(--papier);
+  font: inherit;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--corail);
+}
+
+.case {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 44px;
+  padding-top: 8px;
+}
+
+.case input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--ambre);
+}
+
+.hint {
+  color: var(--brume);
+  font-size: var(--text-sm);
+}
+
+.field-error {
+  color: var(--corail);
+  font-size: var(--text-sm);
+}
+
+.error-summary {
+  padding: 12px;
+  border: 2px solid var(--corail);
+  border-radius: 12px;
+}
+
+.error-summary ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 12px;
+  font: 700 1rem var(--texte);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--ambre);
+  color: var(--nuit);
+}
+
+.btn-secondary {
+  background: var(--nuit3);
+  color: var(--papier);
+}
+
+.btn-danger {
+  background: none;
+  border: 2px solid var(--corail);
+  color: var(--corail);
+}
