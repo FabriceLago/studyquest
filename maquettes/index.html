@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudyQuest, maquette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{--nuit:#12162a;--nuit2:#1b2040;--nuit3:#2a2f55;--ligne:#454b7c;--papier:#f7f1e3;--brume:#c2c6dc;--ambre:#ffc35c;--menthe:#5fdcb5;--corail:#ff9682;
+--titre:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--texte:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--nuit);color:var(--papier);font:400 1rem/1.45 var(--texte)}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--ambre);outline-offset:2px}
+#app{max-width:480px;margin:auto;padding:16px 16px 100px}
+#app.flux{padding-bottom:32px}
+h1,h2{font-family:var(--titre);font-weight:700;line-height:1.15;margin:0}
+h1{font-size:1.65rem}
+h1:focus{outline:none}
+h2{font-size:1.15rem;margin:24px 0 8px}
+p{margin:0}
+.sur{color:var(--ambre);font-size:.85rem;font-weight:700}
+.petit{color:var(--brume);font-size:.875rem}
+.haut{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.serie{text-align:right;flex:none}
+.serie strong{display:block;font:700 1.65rem/1 var(--titre);color:var(--ambre)}
+.jauge{height:8px;background:var(--nuit3);border-radius:4px;overflow:hidden;margin-top:12px}
+.jauge i{display:block;height:100%;background:var(--ambre);transition:width .4s}
+.carte{display:block;width:100%;height:auto;margin:8px 0 0}
+.carte-lien{cursor:pointer}
+.lot{cursor:pointer}
+.monte{animation:monte .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes monte{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+ul,ol{list-style:none;margin:0;padding:0}
+.mission{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 0;background:none;border:0;border-top:1px solid var(--ligne);text-align:left}
+.mission:disabled{cursor:default}
+.puce{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--brume);display:grid;place-items:center;font-weight:700}
+.fait .puce{background:var(--menthe);border-color:var(--menthe);color:var(--nuit)}
+.mission b{display:block}
+.mission .gain{margin-left:auto;flex:none;color:var(--ambre);font-weight:700;font-size:.9rem}
+.fait .gain{color:var(--brume)}
+.bouton{display:block;width:100%;min-height:52px;margin-top:16px;padding:12px 16px;border-radius:12px;border:0;background:var(--ambre);color:var(--nuit);font-weight:700;text-align:center;text-decoration:none}
+.bouton:disabled{background:var(--nuit3);color:var(--brume);cursor:not-allowed}
+.discret{background:none;border:0;color:var(--brume);text-decoration:underline;padding:12px 0;min-height:44px}
+.onglets{position:fixed;left:0;right:0;bottom:0;background:var(--nuit2);border-top:1px solid var(--ligne)}
+.onglets div{display:flex;max-width:480px;margin:auto}
+.onglets button{flex:1;min-height:60px;background:none;border:0;color:var(--brume);font-weight:700;border-top:3px solid transparent}
+.onglets button[aria-current=page]{color:var(--ambre);border-top-color:var(--ambre)}
+.entete{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.fermer{flex:none;width:44px;height:44px;border-radius:50%;background:var(--nuit2);border:0;font-size:1.3rem;line-height:1}
+.barre{flex:1;height:8px;background:var(--nuit3);border-radius:4px;overflow:hidden}
+.barre i{display:block;height:100%;background:var(--menthe);transition:width .3s}
+.compte{flex:none;color:var(--brume);font-size:.9rem;font-variant-numeric:tabular-nums}
+.choix{display:flex;gap:10px;align-items:center;width:100%;min-height:52px;margin-top:10px;padding:10px 14px;background:var(--nuit2);border:2px solid var(--ligne);border-radius:12px;text-align:left}
+.choix[aria-pressed=true]{border-color:var(--ambre)}
+.choix.vrai{border-color:var(--menthe)}
+.choix.faux{border-color:var(--corail)}
+.choix em{margin-left:auto;font-style:normal;font-size:.8rem;flex:none}
+.choix.vrai em{color:var(--menthe)}.choix.faux em{color:var(--corail)}
+.choix:disabled{cursor:default;color:var(--papier)}
+.assoc{display:block;margin-top:14px;font-weight:700}
+.assoc select{display:block;width:100%;min-height:48px;margin-top:6px;padding:8px;background:var(--nuit2);border:2px solid var(--ligne);border-radius:10px;font-weight:400}
+.assoc.vrai select{border-color:var(--menthe)}.assoc.faux select{border-color:var(--corail)}
+.assoc small{display:block;font-weight:400;margin-top:4px;color:var(--corail);font-size:.875rem}
+.ordre li{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 8px 8px 14px;background:var(--nuit2);border:2px solid var(--ligne);border-radius:12px}
+.ordre li.vrai{border-color:var(--menthe)}.ordre li.faux{border-color:var(--corail)}
+.ordre span{flex:1;min-width:0}
+.ordre button{flex:none;width:44px;height:44px;background:var(--nuit3);border:0;border-radius:8px}
+.ordre button:disabled{opacity:.35;cursor:default}
+.retour{margin-top:16px;padding-top:14px;border-top:3px solid var(--menthe)}
+.retour.non{border-top-color:var(--corail)}
+.retour strong{font:700 1.15rem var(--titre)}
+.retour blockquote{margin:12px 0 0;padding-left:12px;border-left:3px solid var(--ambre)}
+.retour cite{display:block;font-style:normal;color:var(--brume);font-size:.8rem;margin-bottom:2px}
+.chrono{font:700 3rem/1 var(--titre);color:var(--ambre);font-variant-numeric:tabular-nums}
+.chrono.urgent{color:var(--corail)}
+.flash{min-height:1.5em;margin-top:12px;font-weight:700}
+.chiffres{display:flex;gap:24px;margin-top:16px}
+.chiffres strong{display:block;font:700 1.65rem/1.1 var(--titre);color:var(--ambre)}
+.legende{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:.875rem;color:var(--brume)}
+.pastille{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:var(--brume)}
+.maitrisee .pastille,.pastille.maitrisee{background:var(--ambre)}
+.a_revoir .pastille,.pastille.a_revoir{background:var(--corail)}
+.en_cours .pastille,.pastille.en_cours{background:var(--menthe)}
+.vide .pastille,.pastille.vide{background:none;border:1px dashed var(--brume)}
+.notion{display:flex;align-items:center;width:100%;min-height:48px;gap:4px;padding:8px 0;background:none;border:0;border-top:1px solid var(--ligne);text-align:left}
+.notion[aria-pressed=true]{color:var(--ambre)}
+.notion small{margin-left:auto;padding-left:10px;flex:none;color:var(--brume);font-size:.8rem}
+.rang{display:flex;align-items:center;gap:12px;min-height:52px;border-top:1px solid var(--ligne)}
+.rang b{width:1.5em;font-family:var(--titre);text-align:center}
+.rang.moi{color:var(--ambre)}
+.rang span{flex:1;min-width:0}
+.rang small{color:var(--brume);flex:none;font-size:.8rem}
+.rang.moi small{color:var(--ambre)}
+.rang strong{flex:none;font-variant-numeric:tabular-nums}
+.code{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:10px 12px;background:var(--nuit2);border-radius:12px}
+.code strong{font:700 1.2rem var(--titre);letter-spacing:.06em}
+.code button{min-height:44px;padding:0 14px;background:var(--nuit3);border:0;border-radius:8px;font-weight:700}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav class="onglets" id="onglets" aria-label="Navigation principale"></nav>
+<script>
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;")
+  .replace(/ ([?!:;»])/g, " $1").replace(/« /g, "« ");
+
+/* ---------- Données inventées ---------- */
+const QUARTIERS = {
+  bio: { nom: "Biologie", cours: "Du génotype au phénotype", ox: 0, oy: 0, sol: "#27405a" },
+  hist: { nom: "Histoire", cours: "La Révolution", ox: 4, oy: 0, sol: "#45324f" },
+  philo: { nom: "Philosophie", cours: "La liberté", ox: 0, oy: 4, sol: "#2f3a63" },
+  maths: { nom: "Maths", cours: "Vecteurs", ox: 4, oy: 4, sol: "#2a4a4c" },
+};
+const LOTS = [
+  ["bio", 0, 0, "biblio", "Les expressions du génotype", "maitrisee"],
+  ["bio", 1, 1, "maison", "Somation et fluctuation", "maitrisee"],
+  ["bio", 2, 0, "tour", "Mutation et allèles", "en_cours"],
+  ["bio", 0, 2, "ecole", "Dominance et codominance", "a_revoir"],
+  ["bio", 2, 2, "atelier", "Un gène, une enzyme", "vide"],
+  ["hist", 0, 0, "horloge", "Les causes de 1789", "maitrisee"],
+  ["hist", 1, 1, "biblio", "L'Assemblée nationale", "maitrisee"],
+  ["hist", 2, 0, "atelier", "La Terreur", "a_revoir"],
+  ["hist", 0, 2, "maison", "Le Directoire", "vide"],
+  ["philo", 0, 0, "observatoire", "Liberté et déterminisme", "maitrisee"],
+  ["philo", 2, 0, "serre", "Le libre arbitre", "en_cours"],
+  ["philo", 1, 1, "maison", "Liberté et loi", "vide"],
+  ["maths", 0, 0, "serre", "Translations", "maitrisee"],
+  ["maths", 2, 0, "biblio", "Somme de vecteurs", "a_revoir"],
+  ["maths", 1, 1, "ecole", "Colinéarité", "vide"],
+  ["maths", 0, 2, "serre", "Projeté orthogonal", "vide"],
+].map(([q, dx, dy, type, notion, etat], id) => ({ id, q, x: QUARTIERS[q].ox + dx, y: QUARTIERS[q].oy + dy, type, notion, etat }));
+const ETATS = { maitrisee: "Maîtrisée", a_revoir: "À revoir", en_cours: "En construction", vide: "À découvrir" };
+
+const COURS = "Du génotype au phénotype";
+const REVISER = [
+  { type: "unique", notion: "Mutation et allèles", enonce: "Quelle définition le cours donne-t-il d'une mutation ?",
+    options: [["Une modification d'un gène transmise à la descendance", 1], ["Une variation sans modification du gène", 0], ["Une modification limitée à un seul œil", 0]],
+    explication: "Une mutation se caractérise par sa transmission à la descendance.", extrait: "Une mutation est une modification d'un gène transmise à la descendance." },
+  { type: "vrai_faux", notion: "Mutation et allèles", enonce: "Deux allèles occupent un même locus sur deux molécules d'ADN homologues.",
+    options: [["Vrai", 1], ["Faux", 0]],
+    explication: "Le cours l'indique dans sa définition des allèles.", extrait: "Ils occupent un même locus (même place) sur deux molécules d'ADN homologues." },
+  { type: "multiple", notion: "Mutation et allèles", enonce: "Que dit le cours d'un gène modifié par rapport au gène initial ?",
+    options: [["Il concerne le même caractère spécifique", 1], ["Il se trouve à la même position sur la molécule d'ADN", 1], ["Il s'exprime de façon différente", 1], ["Il disparaît dès la première génération", 0]],
+    explication: "Même caractère, même position, mais une expression différente.", extrait: "concerne le même caractère spécifique que le gène initial" },
+  { type: "classement", notion: "Mutation et allèles", enonce: "Remets dans l'ordre la transmission d'une mutation.",
+    etapes: ["La mutation touche la lignée germinale", "Certains gamètes portent le gène modifié", "Les gamètes transmettent la mutation", "Un phénotype anormal apparaît chez les descendants"],
+    explication: "La mutation touche d'abord la lignée germinale, puis apparaît chez les descendants.", extrait: "La mutation touche alors la lignée germinale et c'est pourquoi certains gamètes la porteront." },
+  { type: "association", notion: "Dominance et codominance", enonce: "Associe chaque terme à sa définition.",
+    paires: [["Homozygote", "Deux fois le même gène"], ["Hétérozygote", "Deux allèles différents"], ["Codominance", "Les deux allèles s'expriment"]],
+    explication: "Ces définitions reprennent celles du cours.", extrait: "Un individu qui pour un caractère spécifique donné montre deux fois le même gène, un homozygote" },
+  { type: "unique", notion: "Dominance et codominance", enonce: "Chez un hétérozygote, quel allèle est dit dominant ?",
+    options: [["Le plus ancien", 0], ["Celui qui s'exprime", 1], ["Celui qui ne donne aucune substance", 0]],
+    explication: "C'est le gène qui s'exprime qui est dominant.", extrait: "on considère comme gène ou allèle dominant celui qui s'exprime chez l'hétérozygote" },
+];
+const DECOUVRIR = [
+  { type: "vrai_faux", notion: "Un gène, une enzyme", enonce: "La carence en un acide aminé peut donner un phénotype différent sans changement génotypique.",
+    options: [["Vrai", 1], ["Faux", 0]], explication: "C'est l'exemple de somation donné à la fin du cours.",
+    extrait: "La carence (manque) d'un acide aminé peut induire l'impossibilité de fabriquer certaines enzymes." },
+  { type: "unique", notion: "Un gène, une enzyme", enonce: "Qu'est-ce qui donne sa spécificité au complexe enzymatique ?",
+    options: [["Le ribosome", 0], ["L'ARN t activé", 0], ["La molécule d'ARN m", 1]], explication: "Ribosomes et ARN t sont les mêmes pour toute synthèse.",
+    extrait: "la spécificité du complexe enzymatique est la molécule d'ARN m formée par le gène du protide synthétisé" },
+];
+const DEFI = [
+  ["Une somation change le génotype.", [["Vrai", 0], ["Faux", 1]]],
+  ["Les yeux vairons sont un exemple de :", [["Fluctuation", 1], ["Mutation", 0]]],
+  ["Le rôle premier de la mélanine est de colorer la peau.", [["Vrai", 0], ["Faux", 1]]],
+  ["Une fluctuation est transmise à la descendance.", [["Vrai", 0], ["Faux", 1]]],
+  ["Un allèle qui s'exprime chez l'hétérozygote est :", [["Récessif", 0], ["Dominant", 1]]],
+  ["Une mutation touche la lignée :", [["Germinale", 1], ["Oculaire", 0]]],
+  ["Deux fois le même gène, c'est un :", [["Homozygote", 1], ["Hétérozygote", 0]]],
+  ["Rouge + blanc donne rose : les allèles sont :", [["Codominants", 1], ["Récessifs", 0]]],
+  ["La 1re cause de la mutation doit toucher les gamètes pour être transmise.", [["Vrai", 1], ["Faux", 0]]],
+  ["Le phénotype est l'expression du :", [["Génotype", 1], ["Ribosome", 0]]],
+];
+const GROUPE = [["maxou", 712, 21], ["sam.k", 655, 8], ["Lina", 640, 12], ["ines_b", 590, 30], ["tom", 410, 3], ["yasmine", 365, 5]];
+
+/* ---------- État ---------- */
+const neuf = () => ({ vue: "accueil", xp: 1240, xpJour: 0, serie: 12, gels: 2, serieComptee: false,
+  missions: { reviser: false, decouvrir: false, defi: false }, lots: LOTS.map((l) => ({ ...l })), choisi: null, nouveau: null, flux: null, bilan: null, copie: false });
+let e = neuf();
+let focusTitre = false;
+let minuteur = null;
+const PLAFOND = 300;
+const niveau = (xp) => Math.floor(Math.sqrt(xp / 100)) + 1;
+const seuil = (n) => (n - 1) ** 2 * 100;
+function gagner(n) { const g = Math.min(n, PLAFOND - e.xpJour); e.xp += g; e.xpJour += g; return g; }
+
+/* ---------- Carte isométrique ---------- */
+const TW = 44, TH = 22;
+const pt = (x, y, z = 0) => [(x - y) * TW / 2, (x + y) * TH / 2 - z];
+const poly = (pts, fill, extra = "") => `<polygon points="${pts.map((p) => p.map((n) => n.toFixed(1)).join(",")).join(" ")}" fill="${fill}" ${extra}/>`;
+const P = {
+  bleu: ["#6a72ad", "#4c5390", "#383e72"], prune: ["#8a6aa0", "#684c82", "#503a66"], brique: ["#c08066", "#9c604c", "#7a4a3a"],
+  pierre: ["#b6b3b8", "#8d8b98", "#6e6c7c"], ardoise: ["#5f6f92", "#47566f", "#364358"], vert: ["#5f9e7c", "#477c60", "#37624c"],
+  toit: ["#000", "#a7544a", "#843f39"], chantier: ["#5a5f80", "#454a68", "#373b55"], verre: ["#bff3df", "#7fdcbd88", "#5fc2a388"],
+};
+function boite(x, y, l, p, h, c, z = 0) {
+  const A = pt(x, y + p, z), B = pt(x + l, y + p, z), C = pt(x + l, y, z), D = pt(x, y, z), T = (a) => [a[0], a[1] - h];
+  return poly([T(A), T(B), T(C), T(D)], c[0]) + poly([A, B, T(B), T(A)], c[1]) + poly([B, C, T(C), T(B)], c[2]);
+}
+function fenetres(x, y, l, p, h, z0, allume, cols, rangs, graine) {
+  let s = "";
+  for (let r = 0; r < rangs; r++) for (let c = 0; c < cols; c++) {
+    const z1 = z0 + (r + .28) * h / rangs, z2 = z0 + (r + .72) * h / rangs, on = allume && (c * 3 + r * 5 + graine) % 5 !== 0;
+    const a = x + (c + .25) * l / cols, b = x + (c + .75) * l / cols, d = y + (c + .25) * p / cols, f = y + (c + .75) * p / cols;
+    s += poly([pt(a, y + p, z1), pt(b, y + p, z1), pt(b, y + p, z2), pt(a, y + p, z2)], on ? "#ffc35c" : "#2e3360");
+    s += poly([pt(x + l, d, z1), pt(x + l, f, z1), pt(x + l, f, z2), pt(x + l, d, z2)], on ? "#f0a945" : "#262a52");
+  }
+  return s;
+}
+function toit(x, y, l, p, z, h, c) {
+  const S = pt(x + l / 2, y + p / 2, z + h);
+  return poly([pt(x, y + p, z), pt(x + l, y + p, z), S], c[1]) + poly([pt(x + l, y + p, z), pt(x + l, y, z), S], c[2]);
+}
+const trait = (a, b, c = "#c2c6dc", w = 1) => `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${c}" stroke-width="${w}"/>`;
+const HAUTEUR = { tour: 74, maison: 36, ecole: 50, biblio: 36, observatoire: 42, atelier: 32, horloge: 68, serre: 24 };
+function batiment(l) {
+  const { x, y, type } = l, on = l.etat === "maitrisee" || l.etat === "a_revoir", g = x * 7 + y * 3, m = .15, X = x + m, Y = y + m, L = 1 - 2 * m;
+  switch (type) {
+    case "tour": return boite(X, Y, L, L, 60, P.bleu) + fenetres(X, Y, L, L, 60, 0, on, 2, 6, g) + trait(pt(x + .5, y + .5, 60), pt(x + .5, y + .5, 74));
+    case "maison": return boite(X, Y, L, L, 20, P.brique) + fenetres(X, Y, L, L, 20, 0, on, 2, 1, g) + toit(X, Y, L, L, 20, 15, P.toit);
+    case "ecole": { const a = pt(x + .5, y + .5, 40), b = pt(x + .5, y + .5, 52);
+      return boite(x + .08, y + .2, .84, .6, 26, P.prune) + fenetres(x + .08, y + .2, .84, .6, 26, 0, on, 3, 2, g) + boite(x + .35, y + .35, .3, .3, 14, P.prune, 26) + trait(a, b) + poly([b, [b[0] + 9, b[1] + 3], [b[0], b[1] + 6]], "#ff9682"); }
+    case "biblio": return boite(X - .04, Y - .04, L + .08, L + .08, 6, P.pierre) + boite(X, Y, L, L, 24, P.ardoise, 6) + fenetres(X, Y, L, L, 24, 6, on, 3, 1, g) + boite(X - .05, Y - .05, L + .1, L + .1, 4, P.pierre, 30);
+    case "observatoire": { const c = pt(x + .5, y + .5, 24);
+      return boite(X, Y, L, L, 24, P.ardoise) + fenetres(X, Y, L, L, 24, 0, on, 2, 1, g) + `<path d="M${c[0] - 13} ${c[1]}a13 13 0 0 1 26 0z" fill="#5fdcb5"/>` + trait([c[0] + 2, c[1] - 13], [c[0] + 6, c[1] - 2], "#12162a", 2); }
+    case "atelier": { let s = boite(x + .1, y + .12, .8, .76, 18, P.brique) + fenetres(x + .1, y + .12, .8, .76, 18, 0, on, 3, 1, g);
+      for (let i = 0; i < 3; i++) { const u = x + .1 + i * .8 / 3, v = u + .8 / 3; s += poly([pt(u, y + .88, 18), pt(v, y + .88, 18), pt(v, y + .88, 30)], P.toit[1]); }
+      return s; }
+    case "horloge": { const c = pt(x + .5, y + .7, 42);
+      return boite(x + .3, y + .3, .4, .4, 50, P.pierre) + fenetres(x + .3, y + .3, .4, .4, 32, 0, on, 1, 3, g) + `<circle cx="${c[0]}" cy="${c[1]}" r="5" fill="#ffc35c" stroke="#12162a"/>` + toit(x + .3, y + .3, .4, .4, 50, 16, P.prune); }
+    case "serre": return boite(X, Y, L, L, 8, P.vert) + boite(X, Y, L, L, 14, P.verre, 8) + (on ? fenetres(X, Y, L, L, 14, 8, true, 2, 1, 1) : "");
+  }
+  return "";
+}
+function chantier(l) {
+  const { x, y } = l, m = .15, X = x + m, Y = y + m, L = 1 - 2 * m, H = 24;
+  const coins = [[X, Y + L], [X + L, Y + L], [X + L, Y]];
+  return boite(X, Y, L, L, 7, P.chantier) + coins.map(([a, b]) => trait(pt(a, b, 7), pt(a, b, H), "#5fdcb5")).join("") + trait(pt(X, Y + L, H), pt(X + L, Y + L, H), "#5fdcb5") + trait(pt(X + L, Y + L, H), pt(X + L, Y, H), "#5fdcb5");
+}
+function lotSvg(l, interactif) {
+  const { x, y } = l, sol = [pt(x + .06, y + .06), pt(x + .94, y + .06), pt(x + .94, y + .94), pt(x + .06, y + .94)], c = pt(x + .5, y + .5);
+  let s = `<g class="lot ${l.id === e.nouveau ? "monte" : ""}" ${interactif ? `data-action="lot" data-id="${l.id}"` : ""}>`;
+  s += poly(sol, "transparent", l.etat === "vide" ? 'stroke="#c2c6dc" stroke-width="1" stroke-dasharray="3 3"' : "");
+  if (l.etat === "maitrisee" || l.etat === "a_revoir") s += `<ellipse cx="${c[0]}" cy="${c[1]}" rx="24" ry="12" fill="#ffc35c" opacity=".16"/>` + batiment(l);
+  if (l.etat === "en_cours") s += chantier(l);
+  if (l.etat === "a_revoir") { const b = pt(x + .5, y + .5, HAUTEUR[l.type] + 11); s += `<circle cx="${b[0]}" cy="${b[1]}" r="7.5" fill="#ff9682" stroke="#12162a"/><text x="${b[0]}" y="${b[1] + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="#12162a">!</text>`; }
+  if (l.id === e.choisi) s += poly(sol, "none", 'stroke="#f7f1e3" stroke-width="2"');
+  return s + "</g>";
+}
+function carte(interactif = false) {
+  let sol = boite(0, 0, 7, 7, 8, ["#1b2040", "#23284a", "#1b2040"], -8);
+  for (let x = 0; x < 7; x++) for (let y = 0; y < 7; y++) {
+    const route = x === 3 || y === 3, q = Object.values(QUARTIERS).find((k) => x >= k.ox && x < k.ox + 3 && y >= k.oy && y < k.oy + 3);
+    sol += poly([pt(x, y), pt(x + 1, y), pt(x + 1, y + 1), pt(x, y + 1)], route ? "#1b2040" : q.sol, 'stroke="#12162a" stroke-width=".6"');
+  }
+  const etiquette = (x, y, t) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="11" font-weight="700" fill="#c2c6dc">${t}</text>`;
+  const lots = [...e.lots].sort((a, b) => a.x + a.y - (b.x + b.y)).map((l) => lotSvg(l, interactif)).join("");
+  const faites = e.lots.filter((l) => l.etat === "maitrisee" || l.etat === "a_revoir").length;
+  return `<svg class="carte" viewBox="-160 -66 320 244" role="img" aria-label="Ta ville : ${faites} bâtiments construits sur ${e.lots.length} emplacements. La liste des notions donne le détail.">${sol}${lots}${etiquette(0, -52, "Biologie")}${etiquette(128, -4, "Histoire")}${etiquette(-120, -4, "Philosophie")}${etiquette(0, 174, "Maths")}</svg>`;
+}
+
+/* ---------- Écrans ---------- */
+function accueil() {
+  const n = niveau(e.xp), bas = seuil(n), bout = seuil(n + 1), pc = Math.round((e.xp - bas) / (bout - bas) * 100), m = e.missions;
+  const ligne = (id, titre, detail, gain) => `<li><button class="mission ${m[id] ? "fait" : ""}" data-action="lancer" data-flux="${id}" data-k="m-${id}" ${m[id] ? "disabled" : ""}>
+    <span class="puce" aria-hidden="true">${m[id] ? "✓" : ""}</span><span><b>${esc(titre)}</b><span class="petit">${esc(m[id] ? "Terminée" : detail)}</span></span><span class="gain">${gain}</span></button></li>`;
+  const suivante = !m.reviser ? ["reviser", "Commencer ma révision"] : !m.decouvrir ? ["decouvrir", "Découvrir une notion"] : !m.defi ? ["defi", "Lancer le défi"] : null;
+  return `<div class="haut"><div><p class="sur">Niveau ${n}</p><h1 tabindex="-1">Salut Lina</h1></div>
+    <div class="serie"><strong>${e.serie} j</strong><span class="petit">de série, ${e.gels} gels</span></div></div>
+    <div class="jauge" role="progressbar" aria-label="Progression vers le niveau ${n + 1}" aria-valuenow="${pc}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pc}%"></i></div>
+    <p class="petit" style="margin-top:4px">${e.xp - bas} / ${bout - bas} XP vers le niveau ${n + 1}</p>
+    <div class="carte-lien" data-action="vue" data-vue="ville">${carte()}</div>
+    <h2>Mission du jour</h2>
+    <ul>${ligne("reviser", "Réviser", `${REVISER.length} questions à revoir, environ 5 min`, "+20 XP")}${ligne("decouvrir", "Découvrir", "Un gène, une enzyme", "+20 XP")}${ligne("defi", "Défi", "60 secondes sur ce que tu as déjà vu", "+20 XP")}</ul>
+    ${suivante ? `<button class="bouton" data-action="lancer" data-flux="${suivante[0]}" data-k="cta">${suivante[1]}</button>` : `<p class="sur" style="margin-top:16px">Mission terminée. À demain !</p>`}
+    <p class="petit" style="margin-top:20px">Maquette : données inventées, rien n'est enregistré.</p>
+    <button class="discret" data-action="zero" data-k="zero">Remettre à zéro</button>`;
+}
+function ville() {
+  const choisi = e.lots.find((l) => l.id === e.choisi);
+  const groupes = Object.entries(QUARTIERS).map(([k, q]) => `<h2>${esc(q.nom)}, <span class="petit">${esc(q.cours)}</span></h2><ul>${e.lots.filter((l) => l.q === k).map((l) =>
+    `<li><button class="notion ${l.etat}" data-action="lot" data-id="${l.id}" data-k="n-${l.id}" aria-pressed="${l.id === e.choisi}"><span class="pastille" aria-hidden="true"></span>${esc(l.notion)}<small>${ETATS[l.etat]}</small></button></li>`).join("")}</ul>`).join("");
+  return `<h1 tabindex="-1">Ta ville</h1>${carte(true)}
+    <div class="legende">${Object.entries(ETATS).map(([k, v]) => `<span><i class="pastille ${k}"></i>${v}</span>`).join("")}</div>
+    <p class="petit" style="margin-top:8px;min-height:1.5em" role="status">${choisi ? `${esc(choisi.notion)} : ${ETATS[choisi.etat].toLowerCase()}` : ""}</p>
+    <p class="petit">Prochain décor au niveau ${niveau(e.xp) + 1} : un jardin public.</p>${groupes}`;
+}
+function groupe() {
+  const liste = GROUPE.map(([p, xp, s]) => p === "Lina" ? [p, xp + e.xpJour, e.serie, true] : [p, xp, s, false]).sort((a, b) => b[1] - a[1]);
+  return `<h1 tabindex="-1">Terminale 2</h1><p class="petit">Classement de la semaine, remis à zéro lundi.</p>
+    <ol style="margin-top:12px">${liste.map(([p, xp, s, moi], i) => `<li class="rang ${moi ? "moi" : ""}"><b>${i + 1}</b><span>${esc(p)}${moi ? " (toi)" : ""}</span><small>${s} j</small><strong>${xp} XP</strong></li>`).join("")}</ol>
+    <div class="code"><div><span class="petit">Code d'invitation</span><strong style="display:block">K7PX-2M</strong></div><button data-action="copier" data-k="copier">${e.copie || "Copier"}</button></div>
+    <p class="petit" style="margin-top:12px">Le groupe voit ton pseudo, ton XP de la semaine et ta série. Jamais tes cours.</p>`;
+}
+function entete(f, total) {
+  return `<div class="entete"><button class="fermer" data-action="quitter" data-k="quitter" aria-label="Quitter">×</button>
+    <div class="barre" role="progressbar" aria-label="Progression" aria-valuenow="${f.i + (f.valide ? 1 : 0)}" aria-valuemin="0" aria-valuemax="${total}"><i style="width:${(f.i + (f.valide ? 1 : 0)) / total * 100}%"></i></div>
+    <span class="compte">${f.i + 1}/${total}</span></div>`;
+}
+function saisie(q, f) {
+  const fini = f.valide;
+  if (q.options) {
+    const aide = q.type === "multiple" ? `<p class="petit" style="margin-top:8px">Plusieurs réponses possibles.</p>` : "";
+    return aide + q.options.map(([t, ok], i) => {
+      const pris = f.sel.has(i), etat = !fini ? "" : ok ? "vrai" : pris ? "faux" : "";
+      const note = !fini ? "" : ok ? "<em>Bonne réponse</em>" : pris ? "<em>Ta réponse</em>" : "";
+      return `<button class="choix ${etat}" data-action="choisir" data-i="${i}" data-k="c-${i}" aria-pressed="${pris}" ${fini ? "disabled" : ""}>${esc(t)}${note}</button>`;
+    }).join("");
+  }
+  if (q.paires) {
+    const droites = q.paires.map((p) => p[1]).slice().reverse();
+    return q.paires.map(([g, d], i) => {
+      const v = f.assoc[i] ?? "", etat = !fini ? "" : v === d ? "vrai" : "faux";
+      return `<label class="assoc ${etat}">${esc(g)}<select data-assoc="${i}" data-k="a-${i}" ${fini ? "disabled" : ""}><option value="">Choisir</option>${droites.map((t) => `<option ${t === v ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>${fini && v !== d ? `<small>Bonne réponse : ${esc(d)}</small>` : ""}</label>`;
+    }).join("");
+  }
+  return `<ol class="ordre">${f.ordre.map((idx, i) => {
+    const etat = !fini ? "" : idx === i ? "vrai" : "faux", t = q.etapes[idx];
+    return `<li class="${etat}"><span>${esc(t)}</span>${fini ? "" : `<button data-action="monter" data-i="${i}" data-k="u-${i}" aria-label="Monter : ${esc(t)}" ${i === 0 ? "disabled" : ""}>↑</button><button data-action="descendre" data-i="${i}" data-k="d-${i}" aria-label="Descendre : ${esc(t)}" ${i === f.ordre.length - 1 ? "disabled" : ""}>↓</button>`}</li>`;
+  }).join("")}</ol>${fini ? `<p class="petit" style="margin-top:8px">Ordre attendu : ${q.etapes.map((t, i) => `${i + 1}. ${esc(t)}`).join(" ")}</p>` : ""}`;
+}
+const reponseComplete = (q, f) => q.options ? f.sel.size > 0 : q.paires ? q.paires.every((_, i) => f.assoc[i]) : true;
+const reponseJuste = (q, f) => q.options ? q.options.every(([, ok], i) => Boolean(ok) === f.sel.has(i)) : q.paires ? q.paires.every((p, i) => f.assoc[i] === p[1]) : f.ordre.every((idx, i) => idx === i);
+function session() {
+  const f = e.flux, q = f.questions[f.i];
+  const retour = !f.valide ? "" : `<div class="retour ${f.juste ? "" : "non"}" role="status"><strong>${f.juste ? `Juste, +${f.gainQ} XP` : "À revoir, elle reviendra demain"}</strong>
+    <p style="margin-top:4px">${esc(q.explication)}</p><blockquote><cite>Dans ton cours, ${esc(COURS)}</cite>${esc(q.extrait)}</blockquote>
+    <button class="discret" data-action="signaler" data-k="signaler" ${f.signalee ? "disabled" : ""}>${f.signalee ? "Question retirée de tes révisions" : "Cette question est fausse"}</button></div>
+    <button class="bouton" data-action="suivant" data-k="suivant">${f.i + 1 < f.questions.length ? "Question suivante" : "Voir le résultat"}</button>`;
+  return `${entete(f, f.questions.length)}<p class="sur">${esc(q.notion)}</p><h1 tabindex="-1" style="margin-top:4px">${esc(q.enonce)}</h1>${saisie(q, f)}
+    ${f.valide ? retour : `<button class="bouton" data-action="valider" data-k="valider" ${reponseComplete(q, f) ? "" : "disabled"}>Valider</button>`}`;
+}
+function defi() {
+  const f = e.flux, [enonce, options] = DEFI[f.i];
+  return `<div class="entete"><button class="fermer" data-action="quitter" data-k="quitter" aria-label="Quitter">×</button><div class="barre"><i style="width:${f.i / DEFI.length * 100}%"></i></div><span class="compte">${f.justes} juste${f.justes > 1 ? "s" : ""}</span></div>
+    <p class="chrono ${f.reste <= 10 ? "urgent" : ""}" id="chrono" role="timer" aria-label="Temps restant en secondes">${f.reste}</p>
+    <h1 tabindex="-1" style="margin-top:12px">${esc(enonce)}</h1>
+    ${options.map(([t], i) => `<button class="choix" data-action="repondre" data-i="${i}" data-k="r-${i}">${esc(t)}</button>`).join("")}
+    <p class="flash" role="status">${esc(f.flash ?? "")}</p>`;
+}
+function bilan() {
+  const b = e.bilan, nouveau = e.lots.find((l) => l.id === e.nouveau);
+  return `<p class="sur">${esc(b.titre)}</p><h1 tabindex="-1" style="margin-top:4px">${esc(nouveau ? (nouveau.etat === "maitrisee" ? `${nouveau.notion} s'allume` : `${nouveau.notion} est en chantier`) : "Bien joué")}</h1>
+    ${carte()}<div class="chiffres"><div><strong>${b.justes}/${b.total}</strong><span class="petit">justes</span></div><div><strong>+${b.gain}</strong><span class="petit">XP</span></div><div><strong>${e.serie} j</strong><span class="petit">de série</span></div></div>
+    ${b.note ? `<p class="petit" style="margin-top:12px">${esc(b.note)}</p>` : ""}
+    <button class="bouton" data-action="vue" data-vue="accueil" data-k="retour">Retour à ma journée</button>`;
+}
+const ECRANS = { accueil, ville, groupe, session, defi, bilan };
+
+function rendre() {
+  const cle = document.activeElement?.dataset?.k;
+  const app = document.getElementById("app"), plein = ["session", "defi", "bilan"].includes(e.vue);
+  app.className = plein ? "flux" : "";
+  app.innerHTML = ECRANS[e.vue]();
+  document.getElementById("onglets").innerHTML = plein ? "" : `<div>${[["accueil", "Aujourd'hui"], ["ville", "Ma ville"], ["groupe", "Groupe"]].map(([v, t]) => `<button data-action="vue" data-vue="${v}" data-k="o-${v}" ${e.vue === v ? 'aria-current="page"' : ""}>${esc(t)}</button>`).join("")}</div>`;
+  if (focusTitre) { focusTitre = false; window.scrollTo(0, 0); app.querySelector("h1")?.focus(); }
+  else if (cle) document.querySelector(`[data-k="${cle}"]:not(:disabled)`)?.focus();
+}
+function aller(vue) { e.vue = vue; focusTitre = true; rendre(); }
+
+/* ---------- Actions ---------- */
+function nouvelleQuestion(q) {
+  // Ordre de départ d'un classement : jamais déjà le bon.
+  return { sel: new Set(), assoc: {}, ordre: q.etapes ? q.etapes.map((_, i) => (i + 2) % q.etapes.length) : [], valide: false, juste: false, gainQ: 0, signalee: false };
+}
+function terminerMission(id, f, valeur) {
+  const premiere = !e.missions[id];
+  e.missions[id] = true;
+  const prime = premiere ? gagner(20) : 0;
+  if (!e.serieComptee) { e.serie++; e.serieComptee = true; }
+  return f.gain + prime;
+}
+function finirDefi() {
+  clearInterval(minuteur); minuteur = null;
+  const f = e.flux, gain = terminerMission("defi", f);
+  e.nouveau = null;
+  e.bilan = { titre: "Défi terminé", justes: f.justes, total: f.i, gain, note: "Le défi ne porte que sur des notions déjà vues." };
+  aller("bilan");
+}
+const A = {
+  vue(el) { e.nouveau = el.dataset.vue === "accueil" ? e.nouveau : null; e.copie = false; aller(el.dataset.vue); },
+  lot(el) { e.choisi = Number(el.dataset.id); rendre(); },
+  zero() { clearInterval(minuteur); e = neuf(); focusTitre = true; rendre(); },
+  lancer(el) {
+    const id = el.dataset.flux; e.nouveau = null;
+    if (id === "defi") {
+      e.flux = { id, i: 0, justes: 0, gain: 0, reste: 60, flash: null };
+      minuteur = setInterval(() => {
+        e.flux.reste--;
+        if (e.flux.reste <= 0) return finirDefi();
+        const c = document.getElementById("chrono");
+        c.textContent = e.flux.reste; c.classList.toggle("urgent", e.flux.reste <= 10);
+      }, 1000);
+      return aller("defi");
+    }
+    const questions = id === "reviser" ? REVISER : DECOUVRIR;
+    e.flux = { id, questions, i: 0, justes: 0, gain: 0, ...nouvelleQuestion(questions[0]) };
+    aller("session");
+  },
+  quitter() { clearInterval(minuteur); minuteur = null; e.flux = null; aller("accueil"); },
+  choisir(el) {
+    const f = e.flux, q = f.questions[f.i], i = Number(el.dataset.i);
+    if (q.type === "multiple") f.sel.has(i) ? f.sel.delete(i) : f.sel.add(i); else f.sel = new Set([i]);
+    rendre();
+  },
+  monter(el) { const o = e.flux.ordre, i = Number(el.dataset.i); [o[i - 1], o[i]] = [o[i], o[i - 1]]; rendre(); },
+  descendre(el) { const o = e.flux.ordre, i = Number(el.dataset.i); [o[i + 1], o[i]] = [o[i], o[i + 1]]; rendre(); },
+  valider() {
+    const f = e.flux, q = f.questions[f.i];
+    f.valide = true; f.juste = reponseJuste(q, f);
+    if (f.juste) { f.justes++; f.gainQ = gagner(f.id === "reviser" ? 10 : 5); f.gain += f.gainQ; }
+    rendre(); document.querySelector('[data-k="suivant"]')?.focus();
+  },
+  signaler() { e.flux.signalee = true; rendre(); },
+  suivant() {
+    const f = e.flux;
+    if (f.i + 1 < f.questions.length) { f.i++; Object.assign(f, nouvelleQuestion(f.questions[f.i])); focusTitre = true; return rendre(); }
+    const gain = terminerMission(f.id, f), nom = f.id === "reviser" ? "Mutation et allèles" : "Un gène, une enzyme";
+    const lot = e.lots.find((l) => l.notion === nom);
+    lot.etat = f.id === "reviser" ? "maitrisee" : "en_cours"; e.nouveau = lot.id;
+    e.bilan = { titre: f.id === "reviser" ? "Révision terminée" : "Notion découverte", justes: f.justes, total: f.questions.length, gain,
+      note: f.justes < f.questions.length ? "Les questions ratées reviennent dès demain." : "" };
+    aller("bilan");
+  },
+  repondre(el) {
+    const f = e.flux, options = DEFI[f.i][1], choisi = options[Number(el.dataset.i)];
+    if (choisi[1]) { f.justes++; f.gain += gagner(2); f.flash = "Juste, +2 XP"; }
+    else f.flash = `Non : ${options.find((o) => o[1])[0]}`;
+    f.i++;
+    if (f.i >= DEFI.length) return finirDefi();
+    rendre();
+  },
+  copier() {
+    const fin = (texte) => { e.copie = texte; rendre(); };
+    (navigator.clipboard?.writeText("K7PX-2M") ?? Promise.reject()).then(() => fin("Copié"), () => fin("Copie impossible"));
+  },
+};
+document.addEventListener("click", (ev) => { const el = ev.target.closest("[data-action]"); if (el && !el.disabled) A[el.dataset.action]?.(el); });
+document.addEventListener("change", (ev) => {
+  const i = ev.target.dataset?.assoc;
+  if (i !== undefined) { e.flux.assoc[i] = ev.target.value; rendre(); }
+});
+rendre();
+</script>
+</body>
+</html>
