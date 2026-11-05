@@ -56,6 +56,46 @@ Après chaque étape : rapport avec preuves, phrase de fin, puis arrêt jusqu'au
 
 ---
 
+## Étape 7 : groupes et classement
+
+Écrit le 5 novembre 2026, après la validation de l'étape 6.
+
+**Livrable :** des groupes par code d'invitation (classe ou amis), 50 membres au plus, avec un classement de la semaine remis à zéro le lundi à 0 h (heure de Paris). Les avatars, reportés de l'étape 6, arrivent ici aussi.
+
+**Choix :**
+- **Repris de Cyber Academy et simplifié :**
+  - les tables `groups` et `group_members` ;
+  - le code tiré au hasard dans un alphabet sans signes ambigus (8 signes) ;
+  - la création, l'adhésion et un nouveau code.
+  - Le navigateur ne fait que lire ses groupes par la RLS. Tout le reste passe par des fonctions serveur qui vérifient les droits.
+- **Le classement** est renvoyé par une fonction réservée aux membres. Pour chaque membre, elle donne seulement le pseudo, l'XP gagnée depuis lundi et la série. Pas de cours, pas de niveau, pas d'avatar, pas d'adresse. L'identifiant d'un membre est renvoyé à la seule personne qui a créé le groupe, pour qu'elle puisse le retirer.
+- **Modération minimale :** la personne qui crée le groupe peut retirer un membre, tirer un nouveau code (l'ancien ne marche plus) et supprimer le groupe. Un membre peut quitter le groupe. Les valeurs (50 membres, 10 groupes créés par compte) rejoignent `regles()`.
+- **Avatars :** 8 symboles dessinés en SVG, 3 de base puis un par niveau jusqu'au 6, comme les bâtiments. Le choix se fait dans Profil, et le serveur refuse un avatar pas encore débloqué. L'avatar s'affiche pour soi seulement : la règle du classement prime sur ma note de l'étape 6, qui prévoyait de le montrer au groupe.
+- **Accès :** l'en-tête ne peut pas prendre un quatrième lien sur un téléphone. On accède aux groupes depuis Aujourd'hui, comme aux duels.
+
+**Tâches :** migration et tests en base avec plusieurs comptes ; service, pages Groupes et Groupe, lien sur Aujourd'hui ; avatars dans Profil et sur Aujourd'hui ; parcours à deux comptes, audit d'accessibilité.
+
+**État au 5 novembre (fin d'étape 7) :** tout est fait et vérifié sur le Supabase local, avec l'IA simulée. Résultats : 284 tests en base (48 nouveaux), sur base vide puis remplie ; lint ; 44 tests unitaires ; 17 tests serveur ; build ; 28 parcours sur mobile et 8 sur ordinateur.
+
+Les tests en base, à quatre comptes, vérifient :
+- un membre reçoit exactement pseudo, XP depuis lundi, série et « toi », sans identifiant ;
+- l'XP d'avant lundi ne compte pas ;
+- le 51e membre est refusé ;
+- l'ancien code ne marche plus après un changement ;
+- quitter, retirer et supprimer fonctionnent ;
+- un avatar pas encore débloqué est refusé.
+
+Le parcours à deux comptes vérifie que Sam ne voit ni le cours de Lina ni la modération, que Lina retire Sam puis supprime le groupe, et que l'audit axe est vert.
+
+Corrigé en route : la page Profil débordait sur un téléphone, à cause de la mention « Niveau N » des avatars.
+
+Non vérifié :
+- un vrai passage de lundi : la remise à zéro est prouvée par le calcul, sur des données datées du dimanche ;
+- le bouton Copier sur un vrai téléphone ;
+- un lecteur d'écran utilisé par une personne.
+
+---
+
 ## Étape 6 : carte et récompenses
 
 Écrit le 5 novembre 2026, après la validation de l'étape 5.

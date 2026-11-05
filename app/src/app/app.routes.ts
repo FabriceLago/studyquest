@@ -35,6 +35,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/ville/ville-page').then((m) => m.VillePage),
   },
   {
+    path: 'groupes',
+    title: 'Mes groupes, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/groupes/groupes-page').then((m) => m.GroupesPage),
+  },
+  {
+    path: 'groupes/:id',
+    title: 'Classement du groupe, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/groupes/groupe-page').then((m) => m.GroupePage),
+  },
+  {
     path: 'cours/importer',
     title: 'Importer un cours, StudyQuest',
     canActivate: [compteRequis],

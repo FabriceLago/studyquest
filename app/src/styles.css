@@ -795,3 +795,127 @@ h1[tabindex='-1']:focus {
     animation: none;
   }
 }
+
+/* Étape 7 : avatars et classement de groupe (maquette validée). */
+.avatar {
+  display: block;
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+
+.avatar circle {
+  fill: var(--nuit3);
+}
+
+.avatar path {
+  fill: var(--ambre);
+}
+
+.salut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.salut .avatar {
+  width: 52px;
+  height: 52px;
+}
+
+.avatars {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-inline: 0;
+  padding: 0;
+  border: 0;
+  /* Un fieldset prend par défaut la largeur de son contenu : il déborderait sur un téléphone. */
+  min-inline-size: 0;
+}
+
+.avatars legend {
+  padding: 0;
+  font: 700 1.25rem var(--titre);
+}
+
+.avatars .hint {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.avatar-choix {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 6px 10px;
+  border: 2px solid var(--ligne);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.avatar-choix:has(input:checked) {
+  border-color: var(--ambre);
+}
+
+.avatar-choix:has(input:disabled) {
+  cursor: default;
+}
+
+.avatar-nom {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.avatar-nom small {
+  color: var(--brume);
+  font-size: 0.8rem;
+}
+
+.verrou {
+  opacity: 0.35;
+}
+
+.classement {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rang {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  border-top: 1px solid var(--ligne);
+}
+
+.rang b {
+  width: 1.5em;
+  font-family: var(--titre);
+  text-align: center;
+}
+
+.rang span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rang small {
+  flex: none;
+  color: var(--brume);
+  font-size: 0.8rem;
+}
+
+.rang strong {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.rang.moi,
+.rang.moi small {
+  color: var(--ambre);
+}

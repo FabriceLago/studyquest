@@ -10,6 +10,7 @@ import {
   seuil,
 } from '../../core/session/session.service';
 import { CoursVille } from '../../core/ville/ville';
+import { Avatar } from '../../shared/avatar';
 import { CarteVille } from '../ville/carte-ville';
 
 const ETATS: Record<Statut, string> = {
@@ -24,14 +25,17 @@ const ETATS: Record<Statut, string> = {
 /** Page d'arrivée : la mission du jour et l'aperçu de la ville. */
 @Component({
   selector: 'sq-aujourdhui-page',
-  imports: [RouterLink, CarteVille],
+  imports: [RouterLink, CarteVille, Avatar],
   template: `
     <div class="haut">
-      <div>
-        @if (journee()) {
-          <p class="sur">Niveau {{ niveauActuel() }}</p>
-        }
-        <h1>Salut {{ auth.profile()?.pseudo }}</h1>
+      <div class="salut">
+        <sq-avatar [numero]="auth.profile()?.avatar ?? 0" />
+        <div>
+          @if (journee()) {
+            <p class="sur">Niveau {{ niveauActuel() }}</p>
+          }
+          <h1>Salut {{ auth.profile()?.pseudo }}</h1>
+        </div>
       </div>
       @if (journee(); as j) {
         <div class="serie">
@@ -132,6 +136,7 @@ const ETATS: Record<Statut, string> = {
     >
     <p class="bloc"><a routerLink="/cours/rejoindre">J’ai un code de cours</a></p>
     <p class="bloc"><a routerLink="/duel/rejoindre">J’ai un code de duel</a></p>
+    <p class="bloc"><a routerLink="/groupes">Mes groupes et classements</a></p>
     @if (quota(); as q) {
       <p class="hint bloc">
         {{ q.pretes }} {{ q.pretes > 1 ? 'imports' : 'import' }} sur {{ q.total }} ce mois-ci

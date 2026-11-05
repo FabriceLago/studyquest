@@ -4,6 +4,8 @@ import { SUPABASE } from '../supabase/supabase';
 
 export interface Profile {
   readonly pseudo: string;
+  /** Rang dans AVATARS (core/avatars.ts). */
+  readonly avatar: number;
 }
 
 export type AuthResult =
@@ -116,9 +118,17 @@ export class AuthService {
     return this.attempt(async (supabase) => {
       const { error } = await supabase.from('profiles').update({ pseudo }).eq('id', userId);
       if (error) return { ok: false, message: authMessage({}) };
-      this.profile.set({ pseudo });
+      this.profile.update((p) => (p ? { ...p, pseudo } : p));
       return OK;
     });
+  }
+
+  /** Le serveur refuse un avatar pas encore débloqué par le niveau. */
+  async choisirAvatar(avatar: number): Promise<boolean> {
+    const supabase = await this.client;
+    const { error } = await supabase.rpc('choisir_avatar', { p_avatar: avatar });
+    if (!error) this.profile.update((p) => (p ? { ...p, avatar } : p));
+    return !error;
   }
 
   /** Supprime le compte et son profil (serveur), puis ferme la session. */
@@ -154,11 +164,12 @@ export class AuthService {
     const supabase = await this.client;
     const { data } = await supabase
       .from('profiles')
-      .select('pseudo')
+      .select('pseudo, avatar')
       .eq('id', userId)
       .maybeSingle();
     // Une réponse arrivée après une déconnexion ne doit pas réafficher l'ancien profil.
-    if (this.userId() === userId) this.profile.set(data ? { pseudo: data.pseudo } : null);
+    if (this.userId() === userId)
+      this.profile.set(data ? { pseudo: data.pseudo, avatar: data.avatar } : null);
   }
 }
 
