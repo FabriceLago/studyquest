@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { SUPABASE } from '../supabase/supabase';
+import { CoursVille } from '../ville/ville';
 
 export type Mission = 'reviser' | 'decouvrir' | 'defi';
 
@@ -259,6 +260,13 @@ export class SessionService {
   async mesDuels(): Promise<DuelRecent[]> {
     const supabase = await this.client;
     const { data } = await supabase.rpc('mes_duels');
+    return data ?? [];
+  }
+
+  /** Un quartier par cours prêt, avec l'état de chaque notion (spécification § 3). */
+  async maVille(): Promise<CoursVille[]> {
+    const supabase = await this.client;
+    const { data } = await supabase.rpc('ma_ville');
     return data ?? [];
   }
 

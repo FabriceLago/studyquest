@@ -17,6 +17,7 @@ import { AuthService } from './core/auth/auth.service';
             [routerLinkActiveOptions]="{ exact: true }"
             >Aujourd’hui</a
           >
+          <a routerLink="/ville" routerLinkActive="actif" ariaCurrentWhenActive="page">Ma ville</a>
           <a routerLink="/profil" routerLinkActive="actif" ariaCurrentWhenActive="page">Profil</a>
         </nav>
       }

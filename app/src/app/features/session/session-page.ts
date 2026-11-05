@@ -11,6 +11,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { CoursService } from '../../core/cours/cours.service';
 import { QuestionMission, Resultat, SessionService } from '../../core/session/session.service';
+import { CoursVille, messageAllumage } from '../../core/ville/ville';
 import { Bilan } from './bilan';
 import { concentrerTitre } from './concentrer';
 import { SaisieQuestion } from './saisie-question';
@@ -133,9 +134,16 @@ export class SessionPage implements OnInit {
   } | null>(null);
   private justes = 0;
   private gain = 0;
+  /** La ville avant la session, pour annoncer dans le bilan les bâtiments qui s'allument. */
+  private villeAvant: CoursVille[] = [];
 
   async ngOnInit(): Promise<void> {
-    this.questions.set(this.mini() ? await this.fileMini() : await this.file(this.mission()));
+    const [questions, ville] = await Promise.all([
+      this.mini() ? this.fileMini() : this.file(this.mission()),
+      this.service.maVille(),
+    ]);
+    this.questions.set(questions);
+    this.villeAvant = ville;
     this.charge.set(true);
     this.concentrer();
   }
@@ -182,13 +190,15 @@ export class SessionPage implements OnInit {
     if (this.i() + 1 < this.questions().length) {
       this.i.update((i) => i + 1);
     } else {
-      const journee = await this.service.journee();
+      const [journee, ville] = await Promise.all([this.service.journee(), this.service.maVille()]);
+      const serie =
+        this.mini() && journee?.jour_compte ? 'Ta série est gardée pour aujourd’hui.' : '';
       this.bilan.set({
         justes: this.justes,
         total: this.questions().length,
         gain: this.gain,
         serie: journee?.serie ?? 0,
-        note: this.mini() && journee?.jour_compte ? 'Ta série est gardée pour aujourd’hui.' : '',
+        note: [serie, messageAllumage(this.villeAvant, ville)].filter(Boolean).join(' '),
       });
     }
     this.concentrer();

@@ -56,6 +56,35 @@ Après chaque étape : rapport avec preuves, phrase de fin, puis arrêt jusqu'au
 
 ---
 
+## Étape 6 : carte et récompenses
+
+Écrit le 5 novembre 2026, après la validation de l'étape 5.
+
+**Livrable :** la ville de la maquette, nourrie par les vraies données, avec ses décors débloqués par niveau, la série affichée et une liste textuelle équivalente.
+
+**Choix :**
+- Une notion devient un bâtiment quand toutes ses questions sont en boîte 3 ou plus. Le moment est noté dans `notions.batie_at` par un déclencheur sur `reviews`. Le bâtiment reste ensuite, même si une question retombe : il porte alors un repère « à revoir ».
+- Un cours forme un quartier de 4 × 3 emplacements, assez pour les 12 notions au plus que demande la génération. Les quartiers se rangent par date d'import. Dans un quartier, la place de chaque notion vient de l'identifiant du cours et le type de bâtiment de celui de la notion : la ville reste la même d'une visite à l'autre. Supprimer un cours décale les quartiers suivants.
+- Huit types de bâtiments : trois de base, cinq débloqués du niveau 2 au niveau 6. Un bâtiment déjà posé prend sa forme définitive quand le niveau est atteint. Décors : arbres (niveau 2), lampadaires (3), fontaine (4), jardin public (5).
+- Le dessin est calculé dans le navigateur à partir de `ma_ville()`, sans bibliothèque ni image. Un bâtiment apparu dans les dernières 24 h s'anime, sauf en mouvement réduit.
+- Les avatars sont reportés à l'étape 7, où le classement les montrera.
+
+**Tâches :** migration et tests en base ; dessin et tests unitaires ; page Ma ville, aperçu sur Aujourd'hui et bilan « … s'allume » ; parcours, mouvement réduit et audit d'accessibilité.
+
+**État au 5 novembre (fin d'étape 6) :** tout est fait et vérifié sur le Supabase local, avec l'IA simulée. Résultats : 236 tests en base (19 nouveaux), sur base vide puis remplie ; lint ; 44 tests unitaires (10 nouveaux) ; 17 tests serveur ; build ; 26 parcours sur mobile, dont celui de la ville, et 8 sur ordinateur. Le parcours de la ville vérifie :
+- les trois états d'une notion et l'annonce dans le bilan ;
+- l'animation, coupée en mouvement réduit ;
+- le repère d'une notion à revoir ;
+- l'audit axe sur Ma ville et sur Aujourd'hui.
+
+Corrigé en route :
+- le lien de l'aperçu portait un nom différent de son texte visible (règle axe `label-content-name-mismatch`) ;
+- le cadre de la carte laissait une bande vide au-dessus de la ville ; il suit maintenant le contenu dessiné.
+
+Non vérifié : un vrai téléphone, un lecteur d'écran utilisé par une personne.
+
+---
+
 ## Étape 1 : test des modèles
 
 Les commandes `npm` et `node` se lancent depuis `studyquest/experiments/model-test/`, et les commandes `git` depuis `studyquest/`. Sauf mention contraire, les chemins `src/…` sont relatifs à `experiments/model-test/`.

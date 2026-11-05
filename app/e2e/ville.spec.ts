@@ -1,0 +1,103 @@
+import { execFileSync } from 'node:child_process';
+import { Page, expect, test } from '@playwright/test';
+import { exigeSupabase, importer, inscrireEtConfirmer, repondreJuste, sansDefaut } from './aide';
+
+/** Étape 6 : la carte reflète la maîtrise réelle, avec une liste textuelle équivalente. */
+test.beforeEach(async ({ request }, info) => {
+  test.skip(info.project.name !== 'mobile', 'Parcours lourds : sur mobile seulement');
+  await exigeSupabase(request);
+  test.setTimeout(240_000);
+});
+
+/** Avance le temps pour ce compte seulement, dans la base locale de StudyQuest. */
+function sql(requete: string) {
+  execFileSync('docker', [
+    'exec',
+    'supabase_db_studyquest',
+    'psql',
+    '-U',
+    'postgres',
+    '-c',
+    requete,
+  ]);
+}
+
+async function repondreAToutes(page: Page, nombre: number) {
+  for (let i = 0; i < nombre; i++) {
+    await expect(page.getByText(`${i + 1}/${nombre}`)).toBeVisible();
+    await repondreJuste(page);
+    await page.getByRole('button', { name: 'Valider' }).click();
+    await expect(page.getByRole('status')).toContainText('Juste');
+    await page.getByRole('button', { name: /Question suivante|Voir le résultat/ }).click();
+  }
+}
+
+test('la ville reflète la maîtrise réelle, avec une liste textuelle équivalente', async ({
+  page,
+  request,
+}) => {
+  const email = await inscrireEtConfirmer(page, request);
+  const compte = `(select id from auth.users where email = '${email}')`;
+  const notion1 = `(select q.id from public.questions q join public.notions n on n.id = q.notion_id where n.titre = 'Notion 1' and q.owner = ${compte})`;
+  await importer(page);
+
+  // Avant toute réponse : trois terrains vides.
+  await page.getByRole('link', { name: 'Voir ma ville' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Ta ville' })).toBeVisible();
+  await expect(
+    page.getByRole('img', { name: /0 bâtiment construit sur 3 emplacements/ }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: /À découvrir/ })).toHaveCount(3);
+  await sansDefaut(page);
+
+  // Découvrir 8 questions : les deux premières notions passent en chantier.
+  await page.goto('/session/decouvrir');
+  await repondreAToutes(page, 8);
+  await page.goto('/ville');
+  await expect(page.getByRole('button', { name: /En chantier/ })).toHaveCount(2);
+
+  // Les questions de la notion 1 reviennent en révision : justes, elles passent en boîte 3.
+  sql(
+    `update public.reviews set boite = 2, echeance = current_date - 1 where owner = ${compte} and question_id in ${notion1}`,
+  );
+  await page.goto('/session/reviser');
+  await repondreAToutes(page, 4);
+  await expect(page.getByText('« Notion 1 » s’allume dans ta ville.')).toBeVisible();
+
+  await page.goto('/ville');
+  await expect(
+    page.getByRole('img', { name: /1 bâtiment construit sur 3 emplacements/ }),
+  ).toBeVisible();
+  const batie = page.getByRole('button', { name: /Notion 1/ });
+  await batie.click();
+  await expect(batie).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('status')).toHaveText('Notion 1 : Bâtiment construit');
+  await sansDefaut(page);
+
+  // Le bâtiment du jour monte, sauf si le mouvement réduit est demandé.
+  const animation = () =>
+    page
+      .locator('.monte')
+      .first()
+      .evaluate((el) => getComputedStyle(el).animationName);
+  expect(await animation()).toBe('monte');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await animation()).toBe('none');
+  await page.screenshot({ path: test.info().outputPath('ville.png'), fullPage: true });
+
+  // Une question à revoir ajoute un repère, sans détruire le bâtiment.
+  sql(
+    `update public.reviews set echeance = current_date where owner = ${compte} and question_id in ${notion1}`,
+  );
+  await page.reload();
+  await expect(batie).toContainText('Bâtiment construit, à revoir');
+
+  // Sur Aujourd'hui, l'aperçu est décoratif : le lien porte le nom, la page Ma ville le détail.
+  await page.goto('/');
+  await expect(page.getByRole('link', { name: 'Voir ma ville' }).locator('svg')).toHaveAttribute(
+    'aria-hidden',
+    'true',
+  );
+  await sansDefaut(page);
+  await page.screenshot({ path: test.info().outputPath('aujourdhui.png'), fullPage: true });
+});

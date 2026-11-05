@@ -9,6 +9,8 @@ import {
   niveau,
   seuil,
 } from '../../core/session/session.service';
+import { CoursVille } from '../../core/ville/ville';
+import { CarteVille } from '../ville/carte-ville';
 
 const ETATS: Record<Statut, string> = {
   en_attente: 'En préparation',
@@ -19,10 +21,10 @@ const ETATS: Record<Statut, string> = {
   echec: 'Échec',
 };
 
-/** Page d'arrivée : la mission du jour. La carte de la ville arrive à l'étape 6. */
+/** Page d'arrivée : la mission du jour et l'aperçu de la ville. */
 @Component({
   selector: 'sq-aujourdhui-page',
-  imports: [RouterLink],
+  imports: [RouterLink, CarteVille],
   template: `
     <div class="haut">
       <div>
@@ -62,6 +64,12 @@ const ETATS: Record<Statut, string> = {
         <p class="hint">
           Tu as atteint les {{ j.plafond }} XP du jour : la suite ne rapporte plus d’XP.
         </p>
+      }
+      @if (ville().length > 0) {
+        <a class="carte-lien" routerLink="/ville">
+          <sq-carte-ville [cours]="ville()" [niveau]="niveauActuel()" [decor]="true" />
+          <span>Voir ma ville</span>
+        </a>
       }
 
       @if (lignes().length > 0) {
@@ -164,6 +172,7 @@ export class AujourdhuiPage implements OnInit {
   protected readonly quota = signal<{ pretes: number; total: number } | null>(null);
   protected readonly journee = signal<Journee | null>(null);
   protected readonly duels = signal<DuelRecent[]>([]);
+  protected readonly ville = signal<CoursVille[]>([]);
   protected readonly charge = signal(false);
   protected etat = (statut: Statut) => ETATS[statut];
   protected examen = (date: string | null) => libelleExamen(date);
@@ -213,16 +222,18 @@ export class AujourdhuiPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const [cours, quota, journee, duels] = await Promise.all([
+    const [cours, quota, journee, duels, ville] = await Promise.all([
       this.service.liste(),
       this.service.quota(),
       this.session.journee(),
       this.session.mesDuels(),
+      this.session.maVille(),
     ]);
     this.cours.set(cours);
     this.quota.set(quota);
     this.journee.set(journee);
     this.duels.set(duels);
+    this.ville.set(ville);
     this.charge.set(true);
   }
 }

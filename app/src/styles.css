@@ -688,3 +688,110 @@ h1[tabindex='-1']:focus {
     transition: none;
   }
 }
+
+/* Étape 6 : la ville (maquette validée). */
+.carte {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 8px 0 0;
+}
+
+.carte-lien {
+  display: block;
+}
+
+.monte {
+  animation: monte 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes monte {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+  font-size: var(--text-sm);
+  color: var(--brume);
+}
+
+.pastille {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: var(--brume);
+}
+
+.pastille.batie {
+  background: var(--ambre);
+}
+
+.pastille.chantier {
+  background: var(--menthe);
+}
+
+.pastille.due {
+  background: var(--corail);
+}
+
+.pastille.vide {
+  background: none;
+  border: 1px dashed var(--brume);
+}
+
+.statut-ville {
+  min-height: 1.45em;
+}
+
+.notions-ville {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notion-ville {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  gap: 4px;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--ligne);
+  color: var(--papier);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notion-ville[aria-pressed='true'] {
+  color: var(--ambre);
+}
+
+.notion-ville small {
+  margin-left: auto;
+  padding-left: 10px;
+  flex: none;
+  color: var(--brume);
+  font-size: 0.8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monte {
+    animation: none;
+  }
+}

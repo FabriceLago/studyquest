@@ -29,6 +29,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/compte/profil-page').then((m) => m.ProfilPage),
   },
   {
+    path: 'ville',
+    title: 'Ma ville, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/ville/ville-page').then((m) => m.VillePage),
+  },
+  {
     path: 'cours/importer',
     title: 'Importer un cours, StudyQuest',
     canActivate: [compteRequis],
