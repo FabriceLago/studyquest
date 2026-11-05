@@ -1,18 +1,8 @@
-import { APIRequestContext, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { environment } from '../src/environments/environment';
+import { API, MOT_DE_PASSE, exigeSupabase, inscrireEtConfirmer } from './aide';
 
 /** Parcours réels : demandent la pile locale (npm run db:start), ignorés sinon. */
-const API = 'http://127.0.0.1:54721';
-const MAILPIT = 'http://127.0.0.1:54724';
-
-async function exigeSupabase(request: APIRequestContext) {
-  const disponible = await request.get(`${API}/auth/v1/health`, { timeout: 2_000 }).then(
-    (r) => r.ok(),
-    () => false,
-  );
-  test.skip(!disponible, 'Supabase local arrêté');
-}
-
 test("sans déclaration d'âge, l'API refuse le compte, même sans passer par le formulaire", async ({
   request,
 }) => {
@@ -38,33 +28,8 @@ test('inscription, confirmation, profil, déconnexion, suppression', async ({ pa
   await exigeSupabase(request);
   test.setTimeout(120_000);
 
-  const email = `e2e-${Date.now()}@example.test`;
-  const motDePasse = 'une phrase assez longue';
-
-  await page.goto('/inscription');
-  await page.getByLabel('Pseudo').fill('Lina');
-  await page.getByLabel('Adresse e-mail').fill(email);
-  await page.getByLabel('Mot de passe', { exact: true }).fill(motDePasse);
-  await page.getByLabel('J’ai 15 ans ou plus').check();
-  await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await expect(page.getByRole('heading', { name: 'Vérifie ta boîte de réception' })).toBeVisible();
-
-  // Le lien du message de confirmation, relevé dans Mailpit.
-  let lien: string | undefined;
-  await expect
-    .poll(async () => {
-      const recherche = await (
-        await request.get(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)
-      ).json();
-      const id = recherche.messages?.[0]?.ID;
-      if (!id) return undefined;
-      const message = await (await request.get(`${MAILPIT}/api/v1/message/${id}`)).json();
-      lien = message.Text.match(/https?:\/\/\S+/)?.[0];
-      return lien;
-    })
-    .toBeTruthy();
-  await page.goto(lien as string);
-  await expect(page.getByRole('heading', { level: 1, name: 'Salut Lina' })).toBeVisible();
+  const email = await inscrireEtConfirmer(page, request);
+  const motDePasse = MOT_DE_PASSE;
 
   await page.getByRole('link', { name: 'Profil' }).click();
   await page.getByLabel('Pseudo').fill('Lina2');

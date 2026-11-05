@@ -65,6 +65,23 @@ Les **cartes** servent à la révision libre. Elles ne rapportent pas d'XP et ne
 - Une journée compte pour la série dès qu'une mission est terminée.
 - Deux jours de « gel » par mois civil s'appliquent automatiquement pour qu'une absence ne casse pas la série.
 
+### Ajouts du 4 novembre 2026
+
+Quatre ajouts demandés après l'étape 5. Les valeurs chiffrées sont réglables au même endroit que les autres. L'explication d'une erreur par l'IA et le cours d'exemple ont été retirés le même jour à la demande de l'utilisateur.
+
+- **Mode examen :** l'élève indique la date d'examen d'un cours. Tant qu'elle est à venir, une question de ce cours revient au plus tard à la moitié du temps restant, et ce cours passe en premier dans la mission Réviser, avant la règle « les plus en retard d'abord ». Les boîtes ne changent pas.
+- **Mini-mission :** 3 réponses dans la journée (Réviser ou Découvrir), justes ou non, gardent la série, sans prime de mission. **Cette règle assouplit « une journée compte dès qu'une mission est terminée » et reste à tester avec de vrais élèves.**
+- **Examen blanc :** 20 questions au maximum d'un cours, tirées au sort, à 1 minute par question, une fois par jour et par cours. Ni XP ni effet sur la révision. Le résultat donne un score par notion, sans correction question par question : elle dévoilerait les réponses des prochaines révisions.
+- **Partage par code :** l'élève qui déclare en avoir le droit obtient un code privé. Jusqu'à 50 personnes s'en servent pour recevoir leur propre copie des questions, sans coût d'IA ni quota. Une copie ne se repartage pas, et le texte du cours n'est pas copié. Les groupes de l'étape 7 pourront s'appuyer dessus. **Le partage de cours d'un professeur pose une question de droit d'auteur : à valider par un juriste avant toute mise en ligne.**
+
+Cinq autres ajouts, demandés le même jour :
+
+- **Écran des cartes :** une carte par notion, recto puis verso, en révision libre. Ni XP, ni effet sur les missions.
+- **Réviser la notion la plus faible :** après un examen blanc rendu, un bouton remet dans les révisions du jour les questions ratées et déjà découvertes de la notion la moins réussie. Sa boîte ne change pas. Une question jamais découverte reste à découvrir, sinon elle rapporterait 10 XP au lieu de 5.
+- **Mode écoute :** l'app lit la question et ses choix à voix haute avec la synthèse vocale du navigateur, sans coût. La qualité dépend des voix de chaque appareil.
+- **Fiche imprimable :** une page par cours avec ses cartes et ses extraits, à imprimer ou à enregistrer en PDF depuis le navigateur.
+- **Duel en différé :** 10 questions d'un cours partagé, à 30 secondes par question, jouées quand chacun veut, avec un classement sur le nombre de bonnes réponses puis la durée. Seules les personnes qui ont déjà reçu le cours peuvent jouer : un duel n'ouvre aucun nouvel accès. Ni XP, ni correction, ni effet sur la révision, et 3 duels créés par jour au maximum, pour que le score ne serve pas à deviner les réponses. Les pseudos sont visibles entre participants.
+
 ### Carte
 
 - Un cours devient un quartier, une notion un emplacement, une notion maîtrisée un bâtiment.

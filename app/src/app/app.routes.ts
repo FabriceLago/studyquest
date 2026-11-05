@@ -11,6 +11,7 @@ const compteRequis: CanActivateFn = async () => {
 };
 
 const authPage = () => import('./features/compte/auth-page').then((m) => m.AuthPage);
+const sessionPage = () => import('./features/session/session-page').then((m) => m.SessionPage);
 
 export const routes: Routes = [
   {
@@ -26,6 +27,82 @@ export const routes: Routes = [
     title: 'Profil, StudyQuest',
     canActivate: [compteRequis],
     loadComponent: () => import('./features/compte/profil-page').then((m) => m.ProfilPage),
+  },
+  {
+    path: 'cours/importer',
+    title: 'Importer un cours, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/cours/importer-page').then((m) => m.ImporterPage),
+  },
+  {
+    path: 'cours/rejoindre',
+    title: 'Rejoindre un cours, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/cours/rejoindre-page').then((m) => m.RejoindrePage),
+  },
+  {
+    path: 'cours/:id/examen',
+    title: 'Examen blanc, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/session/examen-page').then((m) => m.ExamenPage),
+  },
+  {
+    path: 'cours/:id/cartes',
+    title: 'Cartes de révision, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/cours/cartes-page').then((m) => m.CartesPage),
+  },
+  {
+    path: 'cours/:id/fiche',
+    title: 'Fiche de révision, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/cours/fiche-page').then((m) => m.FichePage),
+  },
+  {
+    path: 'duel/rejoindre',
+    title: 'Rejoindre un duel, StudyQuest',
+    canActivate: [compteRequis],
+    data: { duel: true },
+    loadComponent: () => import('./features/cours/rejoindre-page').then((m) => m.RejoindrePage),
+  },
+  {
+    path: 'duel/:id',
+    title: 'Duel, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/session/duel-page').then((m) => m.DuelPage),
+  },
+  {
+    path: 'cours/:id',
+    title: 'Mon cours, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/cours/cours-page').then((m) => m.CoursPage),
+  },
+  {
+    path: 'session/reviser',
+    title: 'Réviser, StudyQuest',
+    canActivate: [compteRequis],
+    data: { mission: 'reviser' },
+    loadComponent: sessionPage,
+  },
+  {
+    path: 'session/decouvrir',
+    title: 'Découvrir, StudyQuest',
+    canActivate: [compteRequis],
+    data: { mission: 'decouvrir' },
+    loadComponent: sessionPage,
+  },
+  {
+    path: 'session/mini',
+    title: 'Mini-mission, StudyQuest',
+    canActivate: [compteRequis],
+    data: { mini: true },
+    loadComponent: sessionPage,
+  },
+  {
+    path: 'defi',
+    title: 'Défi, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () => import('./features/session/defi-page').then((m) => m.DefiPage),
   },
   {
     path: 'connexion',

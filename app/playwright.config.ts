@@ -17,11 +17,19 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
     { name: 'bureau', use: { ...devices['Desktop Chrome'] } },
   ],
-  webServer: {
-    command:
-      'npm run build && vite preview --outDir dist/studyquest/browser --port 4221 --strictPort',
-    url: 'http://localhost:4221',
-    reuseExistingServer: false,
-    timeout: 240_000,
-  },
+  webServer: [
+    {
+      command:
+        'npm run build && vite preview --outDir dist/studyquest/browser --port 4221 --strictPort',
+      url: 'http://localhost:4221',
+      reuseExistingServer: false,
+      timeout: 240_000,
+    },
+    // IA simulée, jointe par la fonction d'import : aucun appel réel, aucune dépense.
+    {
+      command: 'node e2e/ia-simulee.mjs',
+      url: 'http://127.0.0.1:54799',
+      reuseExistingServer: true,
+    },
+  ],
 });

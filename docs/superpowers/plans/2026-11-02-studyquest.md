@@ -42,6 +42,18 @@
 
 Après chaque étape : rapport avec preuves, phrase de fin, puis arrêt jusqu'au « VALIDÉ ».
 
+**État au 3 novembre 2026 :** à la demande de l'utilisateur, les étapes 2, 3 et 4 ont avancé avant la fin de l'étape 1, qui attend la clé d'API.
+
+**État au 5 novembre 2026 :** étape 5 faite avec l'IA simulée, plus 9 ajouts décrits dans la spécification. Les ports de Supabase passent de 547xx à 548xx : BoutiqueSûre utilise déjà les 547xx.
+
+**Choix de l'étape 4, à relire à la reprise :**
+- Le modèle se règle dans la variable serveur `IMPORT_MODEL`, sans valeur par défaut : son choix revient à l'étape 1.
+- Le quota de 5 imports par mois (`quota_imports_mensuel`) et le plafond de 120 000 tokens d'entrée sont provisoires, à recaler sur les mesures de l'étape 1.
+- La limite de 30 pages est appliquée par ce plafond de tokens, compté gratuitement par l'API avant lecture, et non par un comptage de pages.
+- L'élève peut retirer une question, pas la modifier : modifier demanderait de lui montrer la réponse, ce qui contredit le § 6 de la spécification. Décision à confirmer.
+- La suppression planifiée des fichiers restants après 24 h est reportée à l'étape 8 (un fichier est déjà supprimé après lecture ou échec).
+- La fonction utilise le SDK 1.3.0 : la 1.4.0 était trop récente pour la règle de sécurité de Deno (24 h). À réaligner avec le script de l'étape 1.
+
 ---
 
 ## Étape 1 : test des modèles
