@@ -99,6 +99,24 @@ main {
   padding: 8px 16px 48px;
 }
 
+.pied {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 16px;
+  max-width: 480px;
+  margin: auto;
+  padding: 0 16px 24px;
+  font-size: var(--text-sm);
+}
+
+.pied a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--brume);
+}
+
 .intro {
   margin-top: 6px;
   color: var(--brume);

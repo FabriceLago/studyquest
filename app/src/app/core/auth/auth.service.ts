@@ -135,7 +135,9 @@ export class AuthService {
   async deleteAccount(): Promise<AuthResult> {
     return this.attempt(async (supabase) => {
       const { error } = await supabase.rpc('delete_my_account');
-      if (error) return { ok: false, message: authMessage({}) };
+      // SQ409 : abonnement encore facturé, le serveur dit quoi faire.
+      if (error)
+        return { ok: false, message: error.code === 'SQ409' ? error.message : authMessage({}) };
       await supabase.auth.signOut({ scope: 'local' });
       return OK;
     });

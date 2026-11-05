@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, linkedSignal, signal } from '@angu
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AVATARS } from '../../core/avatars';
+import { RappelsService } from '../../core/rappels/rappels.service';
 import { SessionService, niveau } from '../../core/session/session.service';
 import { Avatar } from '../../shared/avatar';
 
@@ -53,6 +54,42 @@ import { Avatar } from '../../shared/avatar';
     </fieldset>
     <p role="status" class="hint">{{ messageAvatar() }}</p>
 
+    <section class="bloc" aria-labelledby="rappel-titre">
+      <h2 id="rappel-titre">Rappel du jour</h2>
+      <p class="hint">
+        Une notification par jour au plus, entre 6 h et 22 h, seulement si ta mission n’est pas
+        encore faite.
+      </p>
+      @if (rappels.disponible) {
+        <div class="field">
+          <label for="heure-rappel">Heure du rappel</label>
+          <input
+            #heureInput
+            id="heure-rappel"
+            type="time"
+            min="06:00"
+            max="22:00"
+            [value]="heureRappel()"
+            (input)="heureRappel.set(heureInput.value)"
+          />
+        </div>
+        <button type="button" class="btn btn-secondary" (click)="activerRappel()">
+          {{ rappelActif() ? 'Changer l’heure' : 'Activer le rappel' }}
+        </button>
+        @if (rappelActif()) {
+          <button type="button" class="btn btn-secondary" (click)="arreterRappel()">
+            Arrêter le rappel
+          </button>
+        }
+      } @else {
+        <p class="hint">
+          Les notifications ne sont pas disponibles ici. Installe l’application sur ton téléphone
+          pour les recevoir.
+        </p>
+      }
+      <p role="status" class="hint">{{ messageRappel() }}</p>
+    </section>
+
     <section class="bloc" aria-labelledby="session">
       <h2 id="session">Session</h2>
       <button type="button" class="btn btn-secondary" (click)="deconnecter()">
@@ -88,8 +125,35 @@ export class ProfilPage implements OnInit {
   protected readonly niveauActuel = computed(() => niveau(this.xp()));
   protected readonly messageAvatar = signal('');
 
+  protected readonly rappels = inject(RappelsService);
+  protected readonly heureRappel = signal('18:00');
+  protected readonly rappelActif = signal(false);
+  protected readonly messageRappel = signal('');
+
   async ngOnInit(): Promise<void> {
-    this.xp.set((await this.session.journee())?.xp_total ?? 0);
+    const [journee, heure] = await Promise.all([this.session.journee(), this.rappels.heure()]);
+    this.xp.set(journee?.xp_total ?? 0);
+    if (heure) this.heureRappel.set(heure);
+    this.rappelActif.set(heure !== null);
+  }
+
+  protected async activerRappel(): Promise<void> {
+    const heure = this.heureRappel();
+    if (!(heure >= '06:00' && heure <= '22:00')) {
+      this.messageRappel.set('Choisis une heure entre 6 h et 22 h.');
+      return;
+    }
+    const erreur = this.rappelActif()
+      ? await this.rappels.regler(heure)
+      : await this.rappels.activer(heure);
+    if (!erreur) this.rappelActif.set(true);
+    this.messageRappel.set(erreur ?? `Rappel réglé à ${heure}.`);
+  }
+
+  protected async arreterRappel(): Promise<void> {
+    const erreur = await this.rappels.arreter();
+    if (!erreur) this.rappelActif.set(false);
+    this.messageRappel.set(erreur ?? 'Rappel arrêté.');
   }
 
   protected async choisir(avatar: number): Promise<void> {

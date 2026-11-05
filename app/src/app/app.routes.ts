@@ -34,6 +34,30 @@ export const routes: Routes = [
     canActivate: [compteRequis],
     loadComponent: () => import('./features/ville/ville-page').then((m) => m.VillePage),
   },
+  // Pages légales : lisibles sans compte.
+  {
+    path: 'mentions-legales',
+    title: 'Mentions légales, StudyQuest',
+    loadComponent: () => import('./features/legal/pages-legales').then((m) => m.MentionsPage),
+  },
+  {
+    path: 'confidentialite',
+    title: 'Confidentialité, StudyQuest',
+    loadComponent: () =>
+      import('./features/legal/pages-legales').then((m) => m.ConfidentialitePage),
+  },
+  {
+    path: 'conditions',
+    title: 'Conditions d’utilisation et de vente, StudyQuest',
+    loadComponent: () => import('./features/legal/pages-legales').then((m) => m.ConditionsPage),
+  },
+  {
+    path: 'abonnement',
+    title: 'Abonnement, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: () =>
+      import('./features/abonnement/abonnement-page').then((m) => m.AbonnementPage),
+  },
   {
     path: 'groupes',
     title: 'Mes groupes, StudyQuest',

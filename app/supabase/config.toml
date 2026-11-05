@@ -422,3 +422,21 @@ enabled = true
 # La fonction identifie elle-même l'utilisateur à partir de son jeton.
 [functions.import-cours]
 verify_jwt = false
+
+# Abonnement : chaque fonction identifie elle-même l'utilisateur, et Stripe appelle le webhook
+# sans jeton (il est authentifié par sa signature).
+[functions.creer-paiement]
+verify_jwt = false
+
+[functions.portail-abonnement]
+verify_jwt = false
+
+[functions.webhook-stripe]
+verify_jwt = false
+
+[functions.synchroniser-abonnement]
+verify_jwt = false
+
+# Appelée par pg_cron avec un secret partagé (RAPPELS_SECRET), pas par un utilisateur.
+[functions.envoyer-rappels]
+verify_jwt = false

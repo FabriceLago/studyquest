@@ -56,6 +56,53 @@ Après chaque étape : rapport avec preuves, phrase de fin, puis arrêt jusqu'au
 
 ---
 
+## Étape 8 : préparation du lancement
+
+Écrit le 5 novembre 2026, après la validation de l'étape 7. Condition : paiement d'essai de bout en bout, relecture juridique demandée, rien de publié sans accord explicite.
+
+**Livrables et choix :**
+1. **Abonnement Stripe, en mode test.**
+   - Repris de Cyber Academy : `_shared/billing.ts`, `create-checkout`, `customer-portal`, `stripe-webhook`.
+   - Ajout : au retour de la page de paiement, l'application relit l'abonnement chez Stripe. Stripe ne peut pas joindre le poste local sans sa CLI, donc le parcours d'essai ne dépend pas du webhook. Le webhook reste pour les renouvellements et les résiliations ; il est testé avec des événements signés en local.
+   - L'abonnement relève le quota d'imports : 30 par mois au lieu de 5.
+   - Pas d'essai gratuit : le quota gratuit en tient lieu.
+   - Montants provisoires, réunis au même endroit, à fixer après l'étape 1.
+2. **Rappels, sur demande seulement.**
+   - Une notification par jour au plus, à l'heure choisie dans Profil, seulement si aucune mission n'est faite ce jour-là, sans message culpabilisant.
+   - Notifications web : clés VAPID générées en local, abonnements dans `push_subscriptions`, envoi par une fonction appelée toutes les 15 minutes par `pg_cron`.
+   - Désactivable en un geste.
+3. **Pages légales :** mentions légales, confidentialité, conditions d'utilisation et de vente, reprises de Cyber Academy. L'identité de l'éditeur reste à compléter. S'y ajoute une liste de questions pour un juriste, reprise de la spécification § 7, avec le partage de cours et l'achat par un mineur.
+4. **Concurrence, nom, hébergement :** recherche sur le web, puis des propositions avec leurs vérifications (marques INPI et EUIPO, disponibilité des domaines). Le choix revient à l'utilisateur.
+5. **Audit de production** sur le poste, avant toute mise en ligne.
+
+**Rien n'est publié, acheté ni créé à la place de l'utilisateur :** compte Stripe, nom de domaine, hébergement et envoi au juriste restent de son ressort.
+
+**État au 5 novembre (étape 8 construite, condition pas encore remplie) :** tout est vérifié sur le Supabase local, avec l'IA simulée. Résultats : 315 tests en base (31 nouveaux), sur base vide puis remplie ; lint ; 45 tests unitaires ; 25 tests serveur (8 nouveaux) ; build ; 35 parcours sur mobile et 12 sur ordinateur.
+
+Ce que les tests montrent :
+- **Abonnement :** il relève le quota de 5 à 30. Un abonnement résilié ou terminé le ramène à 5. Un compte encore facturé ne se supprime pas. Le webhook refuse une fausse signature et accepte un événement signé.
+- **Rappels :**
+  - la base choisit le rappel de l'heure, une seule fois par jour, et pas si une mission est faite ;
+  - la fonction l'envoie chiffré (`aes128gcm`) et signé (VAPID) à un faux service de notification ;
+  - un navigateur expiré est oublié ;
+  - seuls les services de notification connus sont joignables.
+- **Pages légales :** elles se lisent sans compte, et l'audit axe est vert.
+
+Corrigé en route : sans clé Stripe, le SDK refusait de démarrer et les quatre fonctions plantaient.
+
+**Manque pour remplir la condition :**
+- le paiement d'essai de bout en bout, qui attend une clé Stripe de test de l'utilisateur ;
+- l'envoi de `docs/questions-juriste.md` à un juriste, par l'utilisateur.
+
+Concurrence, nom, hébergement et audit : `docs/etape-8-lancement.md`.
+
+Non vérifié :
+- l'autorisation des notifications et leur réception sur un vrai téléphone ;
+- la planification par `pg_cron` jusqu'à la fonction (le coffre n'est pas réglé en local) ;
+- la page de paiement Stripe elle-même.
+
+---
+
 ## Étape 7 : groupes et classement
 
 Écrit le 5 novembre 2026, après la validation de l'étape 6.

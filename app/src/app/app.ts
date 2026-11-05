@@ -23,6 +23,11 @@ import { AuthService } from './core/auth/auth.service';
       }
     </header>
     <main><router-outlet /></main>
+    <footer class="pied">
+      <a routerLink="/mentions-legales">Mentions légales</a>
+      <a routerLink="/confidentialite">Confidentialité</a>
+      <a routerLink="/conditions">Conditions</a>
+    </footer>
   `,
 })
 export class App {

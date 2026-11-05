@@ -139,7 +139,8 @@ const ETATS: Record<Statut, string> = {
     <p class="bloc"><a routerLink="/groupes">Mes groupes et classements</a></p>
     @if (quota(); as q) {
       <p class="hint bloc">
-        {{ q.pretes }} {{ q.pretes > 1 ? 'imports' : 'import' }} sur {{ q.total }} ce mois-ci
+        {{ q.pretes }} {{ q.pretes > 1 ? 'imports' : 'import' }} sur {{ q.total }} ce mois-ci.
+        <a routerLink="/abonnement">Abonnement</a>
       </p>
     }
     @if (duels().length > 0) {
