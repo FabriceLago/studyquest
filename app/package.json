@@ -6,6 +6,7 @@
   "scripts": {
     "start": "ng serve --port 4220",
     "build": "ng build",
+    "build:deploiement": "ng build --configuration production,deploiement",
     "test": "ng test --watch=false",
     "lint": "ng lint",
     "e2e": "playwright test",

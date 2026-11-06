@@ -33,6 +33,14 @@
               "security": { "autoCsp": true },
               "serviceWorker": "ngsw-config.json"
             },
+            "deploiement": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.deploiement.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
