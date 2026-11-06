@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { createHmac } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { environment } from '../src/environments/environment';
 import { API, exigeSupabase, inscrireEtConfirmer, sansDefaut } from './aide';
 
 /**
@@ -32,10 +33,31 @@ function sql(requete: string) {
   ]);
 }
 
+test('sans paiement, l’étude reste gratuite et aucun abonnement n’est proposé', async ({
+  page,
+  request,
+}) => {
+  test.skip(environment.paiement, 'Paiement ouvert : voir le parcours suivant');
+  await inscrireEtConfirmer(page, request);
+  await expect(page.getByText('0 import sur 5 ce mois-ci.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Abonnement' })).toHaveCount(0);
+  await page.goto('/abonnement');
+  await expect(page.getByRole('heading', { level: 1, name: 'Salut Lina' })).toBeVisible();
+  await page.goto('/conditions');
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Conditions d’utilisation' }),
+  ).toBeVisible();
+  await expect(page.getByText('StudyQuest est gratuit et ne vend rien.')).toBeVisible();
+  await expect(page.getByText(/Stripe|rétractation/)).toHaveCount(0);
+  await page.goto('/confidentialite');
+  await expect(page.getByText(/Stripe/)).toHaveCount(0);
+});
+
 test('l’abonnement relève le quota, et un abonné ne supprime pas son compte sans résilier', async ({
   page,
   request,
 }) => {
+  test.skip(!environment.paiement, 'Paiement coupé pour l’instant (environment.paiement)');
   const email = await inscrireEtConfirmer(page, request);
   await expect(page.getByText('0 import sur 5 ce mois-ci.')).toBeVisible();
   await page.getByRole('link', { name: 'Abonnement' }).click();

@@ -93,11 +93,13 @@ export class MentionsPage {}
         A_COMPLETER : conditions de conservation et cadre du transfert hors de l’Union européenne,
         d’après le contrat signé avec Anthropic.
       </li>
-      <li>
-        Stripe, si tu t’abonnes : il reçoit ton adresse e-mail et tes données de paiement.
-        StudyQuest ne voit ni ne garde ton numéro de carte, seulement l’état de l’abonnement. Les
-        factures sont gardées dix ans, comme l’exige la loi.
-      </li>
+      @if (paiement) {
+        <li>
+          Stripe, si tu t’abonnes : il reçoit ton adresse e-mail et tes données de paiement.
+          StudyQuest ne voit ni ne garde ton numéro de carte, seulement l’état de l’abonnement. Les
+          factures sont gardées dix ans, comme l’exige la loi.
+        </li>
+      }
       <li>
         Le service de notification de ton navigateur (Google, Mozilla, Apple ou Microsoft), si tu
         actives le rappel.
@@ -130,6 +132,7 @@ export class MentionsPage {}
 export class ConfidentialitePage {
   /** Captcha réglé (clé Turnstile) : il est mentionné. */
   protected readonly captcha = environment.turnstileSiteKey !== '';
+  protected readonly paiement = environment.paiement;
 }
 
 /** Conditions d'utilisation et de vente. */
@@ -137,7 +140,7 @@ export class ConfidentialitePage {
   selector: 'sq-conditions-page',
   imports: [RouterLink],
   template: `
-    <h1>Conditions d’utilisation et de vente</h1>
+    <h1>{{ paiement ? 'Conditions d’utilisation et de vente' : 'Conditions d’utilisation' }}</h1>
     <h2 class="bloc">Le service</h2>
     <p>
       StudyQuest transforme les cours que tu importes en questions de révision, avec une
@@ -161,18 +164,26 @@ export class ConfidentialitePage {
       Choisis un pseudo et des noms de groupe respectueux. La personne qui crée un groupe peut en
       retirer un membre. Un compte qui ne respecte pas ces règles peut être supprimé.
     </p>
-    <h2 class="bloc">Abonnement</h2>
-    <p>
-      Sans abonnement, tu importes 5 cours par mois. L’abonnement mensuel porte cette limite à 30.
-      Son prix est affiché sur la page de paiement, avant toute validation. Il est sans engagement :
-      tu le résilies à tout moment depuis la page <a routerLink="/abonnement">Abonnement</a>, et il
-      s’arrête à la fin de la période payée. Le paiement est traité par Stripe.
-    </p>
-    <p>
-      En t’abonnant, tu demandes l’accès immédiat au service et tu reconnais perdre ton droit de
-      rétractation de 14 jours, en cochant la case prévue (code de la consommation, article
-      L221-28).
-    </p>
+    @if (paiement) {
+      <h2 class="bloc">Abonnement</h2>
+      <p>
+        Sans abonnement, tu importes 5 cours par mois. L’abonnement mensuel porte cette limite à 30.
+        Son prix est affiché sur la page de paiement, avant toute validation. Il est sans engagement
+        : tu le résilies à tout moment depuis la page <a routerLink="/abonnement">Abonnement</a>, et
+        il s’arrête à la fin de la période payée. Le paiement est traité par Stripe.
+      </p>
+      <p>
+        En t’abonnant, tu demandes l’accès immédiat au service et tu reconnais perdre ton droit de
+        rétractation de 14 jours, en cochant la case prévue (code de la consommation, article
+        L221-28).
+      </p>
+    } @else {
+      <h2 class="bloc">Gratuité</h2>
+      <p>
+        StudyQuest est gratuit et ne vend rien. La révision n’a pas de limite. Pour maîtriser le
+        coût de l’intelligence artificielle, tu importes jusqu’à 5 cours par mois.
+      </p>
+    }
     <p>Médiation de la consommation : A_COMPLETER : nom et adresse du médiateur choisi.</p>
     <h2 class="bloc">Responsabilité et droit applicable</h2>
     <p>
@@ -185,4 +196,6 @@ export class ConfidentialitePage {
     </p>
   `,
 })
-export class ConditionsPage {}
+export class ConditionsPage {
+  protected readonly paiement = environment.paiement;
+}

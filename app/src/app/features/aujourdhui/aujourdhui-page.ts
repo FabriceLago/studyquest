@@ -12,6 +12,7 @@ import {
 import { CoursVille } from '../../core/ville/ville';
 import { Avatar } from '../../shared/avatar';
 import { CarteVille } from '../ville/carte-ville';
+import { environment } from '../../../environments/environment';
 
 const ETATS: Record<Statut, string> = {
   en_attente: 'En préparation',
@@ -140,7 +141,9 @@ const ETATS: Record<Statut, string> = {
     @if (quota(); as q) {
       <p class="hint bloc">
         {{ q.pretes }} {{ q.pretes > 1 ? 'imports' : 'import' }} sur {{ q.total }} ce mois-ci.
-        <a routerLink="/abonnement">Abonnement</a>
+        @if (paiement) {
+          <a routerLink="/abonnement">Abonnement</a>
+        }
       </p>
     }
     @if (duels().length > 0) {
@@ -180,6 +183,7 @@ export class AujourdhuiPage implements OnInit {
   protected readonly duels = signal<DuelRecent[]>([]);
   protected readonly ville = signal<CoursVille[]>([]);
   protected readonly charge = signal(false);
+  protected readonly paiement = environment.paiement;
   protected etat = (statut: Statut) => ETATS[statut];
   protected examen = (date: string | null) => libelleExamen(date);
 

@@ -5,7 +5,7 @@ import { sansDefaut } from './aide';
 for (const [lien, titre] of [
   ['Mentions légales', 'Mentions légales'],
   ['Confidentialité', 'Confidentialité'],
-  ['Conditions', 'Conditions d’utilisation et de vente'],
+  ['Conditions', 'Conditions d’utilisation'],
 ] as const) {
   test(`la page « ${titre} » s’ouvre sans compte`, async ({ page }) => {
     await page.goto('/inscription');

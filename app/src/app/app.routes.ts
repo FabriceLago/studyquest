@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, Routes } from '@angular/router';
+import { environment } from '../environments/environment';
 import { AuthService } from './core/auth/auth.service';
 
 /** Le contenu de l'élève demande un compte : sans session, direction la connexion. */
@@ -48,16 +49,23 @@ export const routes: Routes = [
   },
   {
     path: 'conditions',
-    title: 'Conditions d’utilisation et de vente, StudyQuest',
+    title: environment.paiement
+      ? 'Conditions d’utilisation et de vente, StudyQuest'
+      : 'Conditions d’utilisation, StudyQuest',
     loadComponent: () => import('./features/legal/pages-legales').then((m) => m.ConditionsPage),
   },
-  {
-    path: 'abonnement',
-    title: 'Abonnement, StudyQuest',
-    canActivate: [compteRequis],
-    loadComponent: () =>
-      import('./features/abonnement/abonnement-page').then((m) => m.AbonnementPage),
-  },
+  // Sans paiement (environment.paiement), la page n'existe pas : son adresse mène à Aujourd'hui.
+  ...(environment.paiement
+    ? [
+        {
+          path: 'abonnement',
+          title: 'Abonnement, StudyQuest',
+          canActivate: [compteRequis],
+          loadComponent: () =>
+            import('./features/abonnement/abonnement-page').then((m) => m.AbonnementPage),
+        },
+      ]
+    : []),
   {
     path: 'groupes',
     title: 'Mes groupes, StudyQuest',

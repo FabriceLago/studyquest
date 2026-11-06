@@ -96,6 +96,12 @@ Corrigé en route : sans clé Stripe, le SDK refusait de démarrer et les quatre
 
 Concurrence, nom, hébergement et audit : `docs/etape-8-lancement.md`.
 
+**Décision du 5 novembre, plus tard :** « l'application doit permettre la révision, l'étude sans plan de paiement pour l'instant ».
+- L'abonnement est coupé par un seul interrupteur, `environment.paiement = false`. La page `/abonnement` n'existe plus et son adresse mène à Aujourd'hui. Le lien a disparu, et les pages légales ne parlent plus ni d'abonnement ni de Stripe : les conditions disent « gratuit, la révision n'a pas de limite ».
+- Les imports de cours restent plafonnés à 5 par mois, pour maîtriser le coût de l'IA.
+- Le code du paiement reste en place, testé en base. Son parcours reprendra en remettant l'interrupteur à `true`. Le paiement d'essai n'est donc plus attendu pour l'instant.
+- Vérifié : 315 tests en base ; 35 parcours sur mobile, dont le nouveau « sans paiement, l'étude reste gratuite » (1 sauté exprès, le parcours payant) ; 12 sur ordinateur.
+
 Non vérifié :
 - l'autorisation des notifications et leur réception sur un vrai téléphone ;
 - la planification par `pg_cron` jusqu'à la fonction (le coffre n'est pas réglé en local) ;
