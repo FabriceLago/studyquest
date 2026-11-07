@@ -54,8 +54,9 @@ export class MentionsPage {}
     <h2 class="bloc">Ce qui est enregistré</h2>
     <ul>
       <li>
-        Ton adresse e-mail et ton mot de passe (gardé sous forme d’empreinte, jamais en clair), pour
-        te connecter, et ta déclaration d’avoir 15 ans ou plus.
+        Un identifiant technique, créé quand tu cliques sur « Commencer » et gardé par ton
+        navigateur, et ta déclaration d’avoir 15 ans ou plus. Aucune adresse e-mail ni aucun mot de
+        passe ne te sont demandés.
       </li>
       <li>Ton pseudo et ton avatar, pour l’affichage.</li>
       <li>
@@ -80,13 +81,13 @@ export class MentionsPage {}
       </li>
     </ul>
     <p>
-      Base légale : l’exécution du service que tu demandes en créant un compte (RGPD, article 6,
-      paragraphe 1, b). Ces données ne sont ni vendues ni utilisées pour de la publicité. Aucun
-      outil de mesure d’audience ni aucun cookie publicitaire n’est utilisé.
+      Base légale : l’exécution du service que tu demandes en cliquant sur « Commencer » (RGPD,
+      article 6, paragraphe 1, b). Ces données ne sont ni vendues ni utilisées pour de la publicité.
+      Aucun outil de mesure d’audience ni aucun cookie publicitaire n’est utilisé.
     </p>
     <h2 class="bloc">Qui traite ces données</h2>
     <ul>
-      <li>Supabase : comptes et base de données, dans l’Union européenne.</li>
+      <li>Supabase : sessions et base de données, dans l’Union européenne.</li>
       <li>A_COMPLETER : l’hébergeur du site, qui garde des journaux techniques de connexion.</li>
       <li>
         Anthropic : le texte de chaque cours importé lui est envoyé pour créer les questions.
@@ -106,18 +107,20 @@ export class MentionsPage {}
       </li>
       @if (captcha) {
         <li>
-          Cloudflare, pour vérifier que les formulaires de compte sont remplis par une personne. Il
+          Cloudflare, pour vérifier que c’est bien une personne qui clique sur « Commencer ». Il
           reçoit ton adresse IP et des informations techniques sur ton navigateur.
         </li>
       }
     </ul>
     <p>
-      Tout est gardé jusqu’à la suppression de ton compte, puis disparaît des sauvegardes au bout de
-      A_COMPLETER : durée de conservation des sauvegardes.
+      Tout est gardé jusqu’à ce que tu supprimes tes données, puis disparaît des sauvegardes au bout
+      de A_COMPLETER : durée de conservation des sauvegardes.
     </p>
     <h2 class="bloc">Tes droits</h2>
     <ul>
-      <li>Effacement : depuis ton <a routerLink="/profil">profil</a>, « Supprimer mon compte ».</li>
+      <li>
+        Effacement : depuis ton <a routerLink="/profil">profil</a>, « Supprimer mes données ».
+      </li>
       <li>
         Accès, rectification, portabilité, limitation, opposition : écris à l’adresse de contact
         ci-dessus.
@@ -147,10 +150,11 @@ export class ConfidentialitePage {
       intelligence artificielle, et organise tes révisions sous forme de jeu. Il s’adresse aux
       personnes de 15 ans et plus.
     </p>
-    <h2 class="bloc">Ton compte</h2>
+    <h2 class="bloc">Ton utilisation</h2>
     <p>
-      Tu déclares avoir 15 ans ou plus en créant ton compte. Tu es responsable de ton mot de passe
-      et de ce que tu fais avec ton compte. Tu peux le supprimer à tout moment depuis ton profil.
+      Tu déclares avoir 15 ans ou plus en cliquant sur « Commencer ». Il n’y a pas de compte : ta
+      progression est liée à ce navigateur, et elle n’est plus accessible si tu effaces ses données
+      ou changes d’appareil. Tu peux supprimer tes données à tout moment depuis ton profil.
     </p>
     <h2 class="bloc">Les cours que tu importes</h2>
     <p>
@@ -162,7 +166,8 @@ export class ConfidentialitePage {
     <h2 class="bloc">Groupes et duels</h2>
     <p>
       Choisis un pseudo et des noms de groupe respectueux. La personne qui crée un groupe peut en
-      retirer un membre. Un compte qui ne respecte pas ces règles peut être supprimé.
+      retirer un membre. Les données de quelqu’un qui ne respecte pas ces règles peuvent être
+      supprimées.
     </p>
     @if (paiement) {
       <h2 class="bloc">Abonnement</h2>

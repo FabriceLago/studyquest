@@ -11,7 +11,10 @@ import { Avatar } from '../../shared/avatar';
   imports: [Avatar],
   template: `
     <h1>Mon profil</h1>
-    <p class="intro">{{ auth.user()?.email }}</p>
+    <p class="intro">
+      Sans compte : ta progression est gardée pour ce navigateur. Si tu effaces ses données ou
+      changes d’appareil, tu repars de zéro.
+    </p>
 
     <form class="form" novalidate (submit)="enregistrer($event)">
       <div class="field">
@@ -87,16 +90,11 @@ import { Avatar } from '../../shared/avatar';
       <p role="status" class="hint">{{ messageRappel() }}</p>
     </section>
 
-    <section class="bloc" aria-labelledby="session">
-      <h2 id="session">Session</h2>
-      <button type="button" class="btn btn-secondary" (click)="deconnecter()">
-        Me déconnecter
-      </button>
-    </section>
-
     <section class="bloc" aria-labelledby="suppression">
-      <h2 id="suppression">Supprimer mon compte</h2>
-      <p class="hint">Ton compte et tout ce qui s’y rattache sont effacés définitivement.</p>
+      <h2 id="suppression">Supprimer mes données</h2>
+      <p class="hint">
+        Ta progression, tes cours et tout ce qui s’y rattache sont effacés définitivement.
+      </p>
       @if (confirmation()) {
         <button type="button" class="btn btn-danger" (click)="supprimer()">
           Oui, tout supprimer
@@ -106,7 +104,7 @@ import { Avatar } from '../../shared/avatar';
         </button>
       } @else {
         <button type="button" class="btn btn-danger" (click)="confirmation.set(true)">
-          Supprimer mon compte
+          Supprimer mes données
         </button>
       }
       <p role="alert" class="field-error">{{ erreur() }}</p>
@@ -173,14 +171,9 @@ export class ProfilPage implements OnInit {
     this.message.set(result.ok ? 'Pseudo enregistré.' : result.message);
   }
 
-  protected async deconnecter(): Promise<void> {
-    await this.auth.signOut();
-    await this.router.navigateByUrl('/connexion');
-  }
-
   protected async supprimer(): Promise<void> {
     const result = await this.auth.deleteAccount();
-    if (result.ok) await this.router.navigateByUrl('/inscription');
+    if (result.ok) await this.router.navigateByUrl('/bienvenue');
     else this.erreur.set(result.message);
   }
 }

@@ -3,15 +3,14 @@ import { CanActivateFn, Router, Routes } from '@angular/router';
 import { environment } from '../environments/environment';
 import { AuthService } from './core/auth/auth.service';
 
-/** Le contenu de l'élève demande un compte : sans session, direction la connexion. */
+/** Le contenu de l'élève demande une session : sans elle, direction Bienvenue. */
 const compteRequis: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   await auth.whenReady;
-  return auth.userId() ? true : router.parseUrl('/connexion');
+  return auth.userId() ? true : router.parseUrl('/bienvenue');
 };
 
-const authPage = () => import('./features/compte/auth-page').then((m) => m.AuthPage);
 const sessionPage = () => import('./features/session/session-page').then((m) => m.SessionPage);
 const ecrirePage = () => import('./features/cours/ecrire-page').then((m) => m.EcrirePage);
 
@@ -168,16 +167,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/session/defi-page').then((m) => m.DefiPage),
   },
   {
-    path: 'connexion',
-    title: 'Connexion, StudyQuest',
-    data: { mode: 'connexion' },
-    loadComponent: authPage,
+    path: 'bienvenue',
+    title: 'Bienvenue, StudyQuest',
+    loadComponent: () => import('./features/compte/bienvenue-page').then((m) => m.BienvenuePage),
   },
-  {
-    path: 'inscription',
-    title: 'Inscription, StudyQuest',
-    data: { mode: 'inscription' },
-    loadComponent: authPage,
-  },
+  // Utilisation libre : il n'y a plus d'inscription ni de connexion.
+  { path: 'connexion', redirectTo: 'bienvenue' },
+  { path: 'inscription', redirectTo: 'bienvenue' },
   { path: '**', redirectTo: '' },
 ];

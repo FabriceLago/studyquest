@@ -3,7 +3,7 @@ import { generateKeyPairSync, randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { expect, test } from '@playwright/test';
-import { API, exigeSupabase, inscrireEtConfirmer, sansDefaut } from './aide';
+import { API, exigeSupabase, commencer, sansDefaut } from './aide';
 
 /**
  * Étape 8 : la chaîne d'envoi d'un rappel, de la base jusqu'au service de notification. Un faux
@@ -61,7 +61,7 @@ test('un rappel part une fois par jour, chiffré et signé, et un navigateur exp
   });
   await new Promise<void>((pret) => service.listen(54798, '0.0.0.0', pret));
   try {
-    const email = await inscrireEtConfirmer(page, request);
+    const email = await commencer(page);
     await page.goto('/profil');
     await expect(page.getByRole('heading', { name: 'Rappel du jour' })).toBeVisible();
     // L'autorisation du navigateur n'est pas jouée ici : seule l'heure est vérifiée avant.
@@ -70,7 +70,7 @@ test('un rappel part une fois par jour, chiffré et signé, et un navigateur exp
     await expect(page.getByText('Choisis une heure entre 6 h et 22 h.')).toBeVisible();
     await sansDefaut(page);
 
-    const compte = `(select id from auth.users where email = '${email}')`;
+    const compte = `'${email}'`;
     sql(`update public.profiles set rappel = '10:00' where id = ${compte};
          insert into public.push_subscriptions (owner, endpoint, p256dh, auth) values
            (${compte}, 'http://host.docker.internal:54798/push/actif-${Date.now()}', '${clePublique()}', '${randomBytes(16).toString('base64url')}'),

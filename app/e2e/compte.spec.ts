@@ -1,57 +1,47 @@
 import { expect, test } from '@playwright/test';
 import { environment } from '../src/environments/environment';
-import { API, MOT_DE_PASSE, exigeSupabase, inscrireEtConfirmer } from './aide';
+import { API, commencer, exigeSupabase, sansDefaut } from './aide';
 
 /** Parcours réels : demandent la pile locale (npm run db:start), ignorés sinon. */
-test("sans déclaration d'âge, l'API refuse le compte, même sans passer par le formulaire", async ({
+test("sans déclaration d'âge, l'API refuse la session, même sans passer par Bienvenue", async ({
   request,
 }) => {
   await exigeSupabase(request);
-  const email = `e2e-age-${Date.now()}@example.test`;
-  const password = 'une phrase assez longue';
-  const headers = { apikey: environment.supabasePublishableKey };
-
-  const inscription = await request.post(`${API}/auth/v1/signup`, {
-    headers,
-    data: { email, password, data: { pseudo: 'Lina' } },
+  const reponse = await request.post(`${API}/auth/v1/signup`, {
+    headers: { apikey: environment.supabasePublishableKey },
+    data: { data: { pseudo: 'Lina' } },
   });
-  expect(inscription.ok()).toBe(false);
-
-  const connexion = await request.post(`${API}/auth/v1/token?grant_type=password`, {
-    headers,
-    data: { email, password },
-  });
-  expect(connexion.ok()).toBe(false);
+  expect(reponse.ok()).toBe(false);
 });
 
-test('inscription, confirmation, profil, déconnexion, suppression', async ({ page, request }) => {
+test('commencer sans compte, garder sa progression, puis tout supprimer', async ({
+  page,
+  request,
+}) => {
   await exigeSupabase(request);
   test.setTimeout(120_000);
 
-  const email = await inscrireEtConfirmer(page, request);
-  const motDePasse = MOT_DE_PASSE;
-
+  await commencer(page);
   await page.getByRole('link', { name: 'Profil' }).click();
-  await page.getByLabel('Pseudo').fill('Lina2');
+  await expect(
+    page.getByText('Sans compte : ta progression est gardée pour ce navigateur.'),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Me déconnecter' })).toHaveCount(0);
+  await sansDefaut(page);
+  await page.getByLabel('Pseudo').fill('Lina');
   await page.getByRole('button', { name: 'Enregistrer' }).click();
   await expect(page.getByText('Pseudo enregistré.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Me déconnecter' }).click();
-  await expect(page).toHaveURL(/\/connexion$/);
-
-  await page.getByLabel('Adresse e-mail').fill(email);
-  await page.getByLabel('Mot de passe', { exact: true }).fill(motDePasse);
-  await page.getByRole('button', { name: 'Me connecter' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: 'Salut Lina2' })).toBeVisible();
+  // Le navigateur garde la session : recharger, ou revenir sur Bienvenue, retrouve la journée.
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Salut Lina' })).toBeVisible();
+  await page.goto('/bienvenue');
+  await expect(page).toHaveURL(/\/$/);
 
   await page.getByRole('link', { name: 'Profil' }).click();
-  await page.getByRole('button', { name: 'Supprimer mon compte' }).click();
+  await page.getByRole('button', { name: 'Supprimer mes données' }).click();
   await page.getByRole('button', { name: 'Oui, tout supprimer' }).click();
-  await expect(page).toHaveURL(/\/inscription$/);
-
-  await page.goto('/connexion');
-  await page.getByLabel('Adresse e-mail').fill(email);
-  await page.getByLabel('Mot de passe', { exact: true }).fill(motDePasse);
-  await page.getByRole('button', { name: 'Me connecter' }).click();
-  await expect(page.getByRole('alert')).toContainText('incorrect');
+  await expect(page).toHaveURL(/\/bienvenue$/);
+  await page.goto('/profil');
+  await expect(page).toHaveURL(/\/bienvenue$/);
 });

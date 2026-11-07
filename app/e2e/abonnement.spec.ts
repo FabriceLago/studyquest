@@ -3,7 +3,7 @@ import { createHmac } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { environment } from '../src/environments/environment';
-import { API, exigeSupabase, inscrireEtConfirmer, sansDefaut } from './aide';
+import { API, exigeSupabase, commencer, sansDefaut } from './aide';
 
 /**
  * Étape 8 : l'abonnement relève le quota. Sans clé Stripe de test sur ce poste, le vrai paiement
@@ -35,14 +35,13 @@ function sql(requete: string) {
 
 test('sans paiement, l’étude reste gratuite et aucun abonnement n’est proposé', async ({
   page,
-  request,
 }) => {
   test.skip(environment.paiement, 'Paiement ouvert : voir le parcours suivant');
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await expect(page.getByText('0 import sur 5 ce mois-ci.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Abonnement' })).toHaveCount(0);
   await page.goto('/abonnement');
-  await expect(page.getByRole('heading', { level: 1, name: 'Salut Lina' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Salut Joueur' })).toBeVisible();
   await page.goto('/conditions');
   await expect(
     page.getByRole('heading', { level: 1, name: 'Conditions d’utilisation' }),
@@ -55,10 +54,9 @@ test('sans paiement, l’étude reste gratuite et aucun abonnement n’est propo
 
 test('l’abonnement relève le quota, et un abonné ne supprime pas son compte sans résilier', async ({
   page,
-  request,
 }) => {
   test.skip(!environment.paiement, 'Paiement coupé pour l’instant (environment.paiement)');
-  const email = await inscrireEtConfirmer(page, request);
+  const email = await commencer(page);
   await expect(page.getByText('0 import sur 5 ce mois-ci.')).toBeVisible();
   await page.getByRole('link', { name: 'Abonnement' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Abonnement' })).toBeVisible();
@@ -75,7 +73,7 @@ test('l’abonnement relève le quota, et un abonné ne supprime pas son compte 
 
   // L'abonnement tel que le serveur l'enregistre après Stripe.
   sql(`insert into public.subscriptions (user_id, stripe_customer_id, status, current_period_end)
-       values ((select id from auth.users where email = '${email}'), 'cus_e2e_${Date.now()}', 'active', now() + interval '1 month')`);
+       values ('${email}', 'cus_e2e_${Date.now()}', 'active', now() + interval '1 month')`);
   // Retour de Stripe : la synchronisation échoue sans clé, la page lit tout de même la table.
   await page.goto('/abonnement?statut=merci');
   await expect(page.getByText('Ton abonnement est actif.')).toBeVisible();

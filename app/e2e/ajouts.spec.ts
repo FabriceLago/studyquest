@@ -1,12 +1,5 @@
 import { expect, test } from '@playwright/test';
-import {
-  chiffres,
-  exigeSupabase,
-  importer,
-  inscrireEtConfirmer,
-  repondreJuste,
-  sansDefaut,
-} from './aide';
+import { chiffres, exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
 
 /** Parcours réels des ajouts du 4 novembre, avec Supabase et une IA simulée : aucune dépense. */
 test.beforeEach(async ({ request }, info) => {
@@ -20,8 +13,8 @@ const dans = (jours: number) => {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 };
 
-test('la mini-mission garde la série sans terminer la mission', async ({ page, request }) => {
-  await inscrireEtConfirmer(page, request);
+test('la mini-mission garde la série sans terminer la mission', async ({ page }) => {
+  await commencer(page);
   await importer(page);
   const lien = page.getByRole('link', { name: /Pas le temps/ });
   await expect(lien).toContainText('3 questions gardent ta série');
@@ -42,8 +35,8 @@ test('la mini-mission garde la série sans terminer la mission', async ({ page, 
   await expect(lien).toBeHidden();
 });
 
-test('une date d’examen s’enregistre, se retire et refuse le passé', async ({ page, request }) => {
-  await inscrireEtConfirmer(page, request);
+test('une date d’examen s’enregistre, se retire et refuse le passé', async ({ page }) => {
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: /Biologie/ }).click();
   const date = page.getByLabel('Mon examen a lieu le');
@@ -67,14 +60,13 @@ test('une date d’examen s’enregistre, se retire et refuse le passé', async 
 
 test('un examen blanc donne un score par notion, sans rien dévoiler ni rapporter', async ({
   page,
-  request,
 }) => {
   const lectures: string[] = [];
   page.on('response', async (r) => {
     if (/rpc\/(demarrer_examen|repondre_examen)/.test(r.url()))
       lectures.push(await r.text().catch(() => ''));
   });
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: /Biologie/ }).click();
   await page.getByRole('link', { name: 'Passer un examen blanc' }).click();
@@ -112,10 +104,9 @@ test('un examen blanc donne un score par notion, sans rien dévoiler ni rapporte
 
 test('un code de partage donne une copie à une autre personne, sans quota', async ({
   page,
-  request,
   browser,
 }) => {
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: /Biologie/ }).click();
   const obtenir = page.getByRole('button', { name: 'Obtenir un code' });
@@ -131,7 +122,7 @@ test('un code de partage donne une copie à une autre personne, sans quota', asy
     serviceWorkers: 'block',
   });
   const autre = await contexte.newPage();
-  await inscrireEtConfirmer(autre, request);
+  await commencer(autre);
   await autre.getByRole('link', { name: 'J’ai un code de cours' }).click();
   const champ = autre.getByLabel('Code du cours');
   await champ.fill('INCONNU');

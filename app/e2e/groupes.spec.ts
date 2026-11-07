@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { devices, expect, test } from '@playwright/test';
 import { AVATARS } from '../src/app/core/avatars';
-import { exigeSupabase, importer, inscrireEtConfirmer, sansDefaut } from './aide';
+import { exigeSupabase, importer, commencer, sansDefaut } from './aide';
 
 /** Étape 7 : groupes par code et classement de la semaine, avatars visibles par soi seulement. */
 test.beforeEach(async ({ request }, info) => {
@@ -20,7 +20,7 @@ function xp(email: string, jour: string, points: number) {
     'postgres',
     '-c',
     `insert into public.daily_stats (owner, jour, xp, reviser_fait)
-       values ((select id from auth.users where email = '${email}'), ${jour}, ${points}, true)
+       values ('${email}', ${jour}, ${points}, true)
        on conflict (owner, jour) do update set xp = excluded.xp, reviser_fait = true`,
   ]);
 }
@@ -29,11 +29,10 @@ const AUJOURDHUI = `(now() at time zone 'Europe/Paris')::date`;
 
 test('un groupe classe ses membres sur la semaine, sans rien montrer de leurs cours', async ({
   page,
-  request,
   browser,
 }) => {
   // Lina crée le groupe. Elle a un cours, qui ne doit jamais apparaître aux autres.
-  const lina = await inscrireEtConfirmer(page, request);
+  const lina = await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: 'Mes groupes et classements' }).click();
   await sansDefaut(page);
@@ -50,7 +49,7 @@ test('un groupe classe ses membres sur la semaine, sans rien montrer de leurs co
     serviceWorkers: 'block',
   });
   const sam = await contexte.newPage();
-  const emailSam = await inscrireEtConfirmer(sam, request);
+  const emailSam = await commencer(sam);
   await sam.goto('/profil');
   await sam.getByLabel('Pseudo').fill('Sam');
   await sam.getByRole('button', { name: 'Enregistrer' }).click();
@@ -67,7 +66,7 @@ test('un groupe classe ses membres sur la semaine, sans rien montrer de leurs co
   await expect(sam.getByRole('heading', { level: 1, name: 'Terminale 2' })).toBeVisible();
   const lignes = sam.locator('.rang');
   await expect(lignes).toHaveCount(2);
-  await expect(lignes.nth(0)).toContainText('Lina');
+  await expect(lignes.nth(0)).toContainText('Joueur');
   await expect(lignes.nth(0)).toContainText('100 XP');
   await expect(lignes.nth(1)).toContainText('Sam (toi)');
   await expect(lignes.nth(1)).toContainText('30 XP');
@@ -95,8 +94,8 @@ test('un groupe classe ses membres sur la semaine, sans rien montrer de leurs co
   await contexte.close();
 });
 
-test('un avatar se débloque avec le niveau', async ({ page, request }) => {
-  const email = await inscrireEtConfirmer(page, request);
+test('un avatar se débloque avec le niveau', async ({ page }) => {
+  const email = await commencer(page);
   await page.goto('/profil');
   const couronne = page.getByRole('radio', { name: /Couronne/ });
   await expect(page.getByRole('radio', { name: /Lune/ })).toBeChecked();

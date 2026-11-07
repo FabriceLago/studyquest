@@ -1,6 +1,6 @@
 import { APIRequestContext, Page, expect, test } from '@playwright/test';
 import { environment } from '../src/environments/environment';
-import { API, exigeSupabase, inscrireEtConfirmer, sansDefaut } from './aide';
+import { API, exigeSupabase, commencer, sansDefaut } from './aide';
 
 /** Parcours réel avec Supabase, la fonction d'import et une IA simulée (e2e/ia-simulee.mjs). */
 const PHRASES = Array.from(
@@ -45,15 +45,12 @@ async function fichiersRestants(page: Page, request: APIRequestContext): Promise
   return (await reponse.json()).length;
 }
 
-test('un texte collé devient des questions, sans jamais exposer les réponses', async ({
-  page,
-  request,
-}) => {
+test('un texte collé devient des questions, sans jamais exposer les réponses', async ({ page }) => {
   const reponses: string[] = [];
   page.on('response', async (r) => {
     if (r.url().includes('/rest/v1/notions')) reponses.push(await r.text());
   });
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await ouvrirImport(page, 'Biologie');
   await sansDefaut(page);
   await page.getByLabel('Du texte à coller').check();
@@ -74,7 +71,7 @@ test('un texte collé devient des questions, sans jamais exposer les réponses',
 });
 
 test('un PDF est lu, ses questions créées et son fichier supprimé', async ({ page, request }) => {
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await ouvrirImport(page, 'Un PDF');
   await page.getByLabel(/Fichier PDF/).setInputFiles({
     name: 'cours.pdf',
@@ -90,7 +87,7 @@ test('des photos passent par la relecture du texte avant les questions', async (
   page,
   request,
 }) => {
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await ouvrirImport(page, 'Mes photos');
   await page.getByLabel('Des photos').check();
   await page.getByLabel(/Photos, 30/).setInputFiles([
@@ -108,8 +105,8 @@ test('des photos passent par la relecture du texte avant les questions', async (
   await expect(page.getByText('12 questions prêtes')).toBeVisible({ timeout: 60_000 });
 });
 
-test('un refus de l’IA est expliqué et ne consomme pas le quota', async ({ page, request }) => {
-  await inscrireEtConfirmer(page, request);
+test('un refus de l’IA est expliqué et ne consomme pas le quota', async ({ page }) => {
+  await commencer(page);
   await ouvrirImport(page, 'Refusé');
   await page.getByLabel('Du texte à coller').check();
   await page.getByLabel('Texte du cours').fill(`REFUS ${TEXTE}`);
@@ -120,7 +117,7 @@ test('un refus de l’IA est expliqué et ne consomme pas le quota', async ({ pa
 });
 
 test('un second import est refusé tant que le premier travaille', async ({ page, request }) => {
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   const appel = await page.evaluate(async () => {
     const cle = Object.keys(localStorage).find(
       (k) => k.startsWith('sb-') && k.endsWith('auth-token'),

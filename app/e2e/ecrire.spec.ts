@@ -1,5 +1,5 @@
 import { Locator, Page, expect, test } from '@playwright/test';
-import { exigeSupabase, inscrireEtConfirmer, sansDefaut } from './aide';
+import { exigeSupabase, commencer, sansDefaut } from './aide';
 
 /** Ajout du 7 novembre : un cours écrit à la main, sans IA ni quota, joué comme les autres. */
 test.beforeEach(async ({ request }) => {
@@ -27,11 +27,8 @@ async function vraiFaux(question: Locator, enonce: string) {
   await expect(question.getByLabel('Vrai', { exact: true })).toBeChecked();
 }
 
-test('écrire un cours à la main, le jouer, puis lui ajouter une notion', async ({
-  page,
-  request,
-}) => {
-  await inscrireEtConfirmer(page, request);
+test('écrire un cours à la main, le jouer, puis lui ajouter une notion', async ({ page }) => {
+  await commencer(page);
   await page.goto('/cours/importer');
   await expect(page.getByRole('link', { name: 'Écrire mes questions moi-même' })).toBeVisible();
 

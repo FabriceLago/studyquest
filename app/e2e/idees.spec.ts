@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { exigeSupabase, importer, inscrireEtConfirmer, repondreJuste, sansDefaut } from './aide';
+import { exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
 
 /** Parcours réels du second lot d'ajouts du 4 novembre, avec une IA simulée : aucune dépense. */
 test.beforeEach(async ({ request }, info) => {
@@ -8,8 +8,8 @@ test.beforeEach(async ({ request }, info) => {
   test.setTimeout(240_000);
 });
 
-test('les cartes se révisent librement, sans XP', async ({ page, request }) => {
-  await inscrireEtConfirmer(page, request);
+test('les cartes se révisent librement, sans XP', async ({ page }) => {
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: /Biologie/ }).click();
   await page.getByRole('link', { name: 'Réviser avec les cartes' }).click();
@@ -35,9 +35,8 @@ test('les cartes se révisent librement, sans XP', async ({ page, request }) => 
 
 test('après un examen blanc, la notion la plus faible revient dans les révisions', async ({
   page,
-  request,
 }) => {
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: 'Découvrir une notion' }).click();
   for (let i = 1; i <= 8; i++) {
@@ -65,13 +64,13 @@ test('après un examen blanc, la notion la plus faible revient dans les révisio
   await expect(page.getByRole('link', { name: /Réviser.*4 questions à revoir/ })).toBeVisible();
 });
 
-test('le mode écoute lit la question et ses choix en français', async ({ page, request }) => {
+test('le mode écoute lit la question et ses choix en français', async ({ page }) => {
   await page.addInitScript(() => {
     const lectures: string[] = [];
     (window as unknown as { lectures: string[] }).lectures = lectures;
     speechSynthesis.speak = (u) => void lectures.push(`${u.lang}|${u.text}`);
   });
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: 'Découvrir une notion' }).click();
   await page.getByRole('button', { name: 'Écouter la question' }).click();
@@ -85,13 +84,13 @@ test('le mode écoute lit la question et ses choix en français', async ({ page,
   await sansDefaut(page);
 });
 
-test('la fiche s’imprime sans le décor de l’application', async ({ page, request }) => {
+test('la fiche s’imprime sans le décor de l’application', async ({ page }) => {
   await page.addInitScript(() => {
     window.print = () => {
       (window as unknown as { imprime: boolean }).imprime = true;
     };
   });
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: /Biologie/ }).click();
   await page.getByRole('link', { name: 'Voir la fiche à imprimer' }).click();
@@ -115,17 +114,13 @@ test('la fiche s’imprime sans le décor de l’application', async ({ page, re
   expect(couleurs).toEqual(['rgb(255, 255, 255)', 'rgb(0, 0, 0)']);
 });
 
-test('un duel se joue en différé, réservé à qui a reçu le cours', async ({
-  page,
-  request,
-  browser,
-}) => {
+test('un duel se joue en différé, réservé à qui a reçu le cours', async ({ page, browser }) => {
   const lectures: string[] = [];
   page.on('response', async (r) => {
     if (/rpc\/(jouer_duel|repondre_duel)/.test(r.url()))
       lectures.push(await r.text().catch(() => ''));
   });
-  await inscrireEtConfirmer(page, request);
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: /Biologie/ }).click();
   const defier = page.getByRole('button', { name: 'Défier un ami sur ce cours' });
@@ -156,7 +151,7 @@ test('un duel se joue en différé, réservé à qui a reçu le cours', async ({
     serviceWorkers: 'block',
   });
   const ami = await contexte.newPage();
-  await inscrireEtConfirmer(ami, request);
+  await commencer(ami);
   await ami.getByRole('link', { name: 'J’ai un code de duel' }).click();
   await ami.getByLabel('Code du duel').fill(codeDuel);
   await ami.getByRole('button', { name: 'Jouer le duel' }).click();
@@ -176,8 +171,8 @@ test('un duel se joue en différé, réservé à qui a reçu le cours', async ({
   }
   await expect(ami.getByRole('heading', { level: 1, name: '0/10' })).toBeVisible();
   await expect(ami.locator('.liste-cours li')).toHaveText([
-    /1\. Lina\s*1\/10/,
-    /2\. Lina \(toi\)\s*0\/10/,
+    /1\. Joueur\s*1\/10/,
+    /2\. Joueur \(toi\)\s*0\/10/,
   ]);
   await contexte.close();
 

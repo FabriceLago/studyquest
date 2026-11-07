@@ -2,8 +2,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { APIRequestContext, Page, expect, test } from '@playwright/test';
 
 export const API = 'http://127.0.0.1:54821';
-const MAILPIT = 'http://127.0.0.1:54824';
-export const MOT_DE_PASSE = 'une phrase assez longue';
 
 /** Un cours de 12 phrases : l'IA simulée (e2e/ia-simulee.mjs) en tire 12 questions. */
 export const TEXTE = Array.from(
@@ -76,31 +74,14 @@ export async function chiffres(page: Page, justes: string, gain: string, serie: 
   await sansDefaut(page);
 }
 
-/** Inscription par le formulaire, puis lien de confirmation relevé dans Mailpit. Revient connecté. */
-export async function inscrireEtConfirmer(page: Page, request: APIRequestContext): Promise<string> {
-  const email = `e2e-${Date.now()}-${Math.round(Math.random() * 1e6)}@example.test`;
-  await page.goto('/inscription');
-  await page.getByLabel('Pseudo').fill('Lina');
-  await page.getByLabel('Adresse e-mail').fill(email);
-  await page.getByLabel('Mot de passe', { exact: true }).fill(MOT_DE_PASSE);
+/** Utilisation libre : Bienvenue, déclaration d'âge, puis Aujourd'hui. Renvoie l'identifiant de la session. */
+export async function commencer(page: Page): Promise<string> {
+  await page.goto('/bienvenue');
   await page.getByLabel('J’ai 15 ans ou plus').check();
-  await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await expect(page.getByRole('heading', { name: 'Vérifie ta boîte de réception' })).toBeVisible();
-
-  let lien: string | undefined;
-  await expect
-    .poll(async () => {
-      const recherche = await (
-        await request.get(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)
-      ).json();
-      const id = recherche.messages?.[0]?.ID;
-      if (!id) return undefined;
-      const message = await (await request.get(`${MAILPIT}/api/v1/message/${id}`)).json();
-      lien = message.Text.match(/https?:\/\/\S+/)?.[0];
-      return lien;
-    })
-    .toBeTruthy();
-  await page.goto(lien as string);
-  await expect(page.getByRole('heading', { level: 1, name: 'Salut Lina' })).toBeVisible();
-  return email;
+  await page.getByRole('button', { name: 'Commencer' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Salut Joueur' })).toBeVisible();
+  return page.evaluate(() => {
+    const cle = Object.keys(localStorage).find((k) => k.endsWith('-auth-token')) ?? '';
+    return JSON.parse(localStorage.getItem(cle) ?? '{}').user.id as string;
+  });
 }

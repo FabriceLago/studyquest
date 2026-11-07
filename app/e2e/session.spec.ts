@@ -1,13 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { Page, expect, test } from '@playwright/test';
-import {
-  chiffres,
-  exigeSupabase,
-  importer,
-  inscrireEtConfirmer,
-  repondreJuste,
-  sansDefaut,
-} from './aide';
+import { chiffres, exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
 
 /** Parcours réel avec Supabase, la fonction d'import et une IA simulée (e2e/ia-simulee.mjs). */
 test.beforeEach(async ({ request }, info) => {
@@ -39,20 +32,19 @@ function rendreDues(email: string) {
     '-U',
     'postgres',
     '-c',
-    `update public.reviews set echeance = current_date - 1 where owner = (select id from auth.users where email = '${email}')`,
+    `update public.reviews set echeance = current_date - 1 where owner = '${email}'`,
   ]);
 }
 
 test('une journée complète : découvrir, défi, réviser, sans jamais recevoir de réponse à l’avance', async ({
   page,
-  request,
 }) => {
   const lectures: string[] = [];
   page.on('response', async (r) => {
     if (/rpc\/(questions_mission|mission_du_jour)/.test(r.url()))
       lectures.push(await r.text().catch(() => ''));
   });
-  const email = await inscrireEtConfirmer(page, request);
+  const email = await commencer(page);
   await expect(page.getByText('Ta ville est encore vide')).toBeVisible();
   await expect(page.getByText('Mission du jour')).toBeHidden();
   await importer(page);
@@ -111,11 +103,8 @@ test('une journée complète : découvrir, défi, réviser, sans jamais recevoir
   expect(lectures.join('')).not.toMatch(/correctes|"associations"|"ordre"|explication|extrait/);
 });
 
-test('une erreur est corrigée, et une question fausse peut être retirée', async ({
-  page,
-  request,
-}) => {
-  await inscrireEtConfirmer(page, request);
+test('une erreur est corrigée, et une question fausse peut être retirée', async ({ page }) => {
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: 'Découvrir une notion' }).click();
 
@@ -137,11 +126,8 @@ test('une erreur est corrigée, et une question fausse peut être retirée', asy
   await expect(page.getByRole('link', { name: /Découvrir.*7 nouvelles questions/ })).toBeVisible();
 });
 
-test('le chrono du défi vient du serveur : recharger ne le remet pas à zéro', async ({
-  page,
-  request,
-}) => {
-  await inscrireEtConfirmer(page, request);
+test('le chrono du défi vient du serveur : recharger ne le remet pas à zéro', async ({ page }) => {
+  await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: 'Découvrir une notion' }).click();
   for (let i = 0; i < 8; i++) {

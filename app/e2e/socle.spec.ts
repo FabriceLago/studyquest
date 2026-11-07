@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { Page, expect, test } from '@playwright/test';
 
-/** Parcours sans Supabase : les appels au service de comptes sont simulés ou coupés. */
+/** Parcours sans Supabase : les appels au service sont simulés ou coupés. */
 async function sansDefaut(page: Page) {
   expect(
     await page.evaluate(
@@ -11,29 +11,19 @@ async function sansDefaut(page: Page) {
   expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
 }
 
-async function remplir(page: Page, age: boolean) {
-  await page.getByLabel('Pseudo').fill('Lina');
-  await page.getByLabel('Adresse e-mail').fill('lina@example.test');
-  await page.getByLabel('Mot de passe', { exact: true }).fill('une phrase assez longue');
-  if (age) await page.getByLabel('J’ai 15 ans ou plus').check();
-}
-
-test('sans session, le contenu renvoie vers la connexion', async ({ page }) => {
+test('sans session, le contenu mène à Bienvenue, et les anciennes pages de compte aussi', async ({
+  page,
+}) => {
   await page.goto('/');
-  await expect(page).toHaveURL(/\/connexion$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Me connecter' })).toBeVisible();
+  await expect(page).toHaveURL(/\/bienvenue$/);
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Bienvenue sur StudyQuest' }),
+  ).toBeVisible();
   await sansDefaut(page);
-  await page.goto('/profil');
-  await expect(page).toHaveURL(/\/connexion$/);
-});
-
-test('un formulaire vide liste ses erreurs et prend le focus', async ({ page }) => {
-  await page.goto('/inscription');
-  await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  const resume = page.getByRole('alert');
-  await expect(resume).toBeFocused();
-  await expect(resume).toContainText('15 ans et plus');
-  await sansDefaut(page);
+  for (const adresse of ['/profil', '/inscription', '/connexion']) {
+    await page.goto(adresse);
+    await expect(page).toHaveURL(/\/bienvenue$/);
+  }
 });
 
 test("sans déclaration d'âge, rien ne part vers le serveur", async ({ page }) => {
@@ -42,41 +32,42 @@ test("sans déclaration d'âge, rien ne part vers le serveur", async ({ page }) 
     appels++;
     return route.abort();
   });
-  await page.goto('/inscription');
-  await remplir(page, false);
-  await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await expect(page.getByRole('alert')).toContainText('15 ans et plus');
+  await page.goto('/bienvenue');
+  await page.getByRole('button', { name: 'Commencer' }).click();
+  await expect(page.getByRole('alert')).toHaveText(
+    'StudyQuest est réservé aux personnes de 15 ans et plus.',
+  );
   expect(appels).toBe(0);
-});
-
-test("l'inscription envoie la déclaration d'âge et annonce le message de confirmation", async ({
-  page,
-}) => {
-  let corps: { data?: { pseudo?: string; declares_15_plus?: boolean } } = {};
-  await page.route('**/auth/v1/signup**', (route) => {
-    corps = route.request().postDataJSON();
-    return route.fulfill({
-      json: {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'lina@example.test',
-        identities: [],
-      },
-    });
-  });
-  await page.goto('/inscription');
-  await remplir(page, true);
-  await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await expect(page.getByRole('heading', { name: 'Vérifie ta boîte de réception' })).toBeVisible();
-  expect(corps.data).toEqual({ pseudo: 'Lina', declares_15_plus: true });
   await sansDefaut(page);
 });
 
-test('un service de comptes injoignable donne un message clair', async ({ page }) => {
+test("Commencer envoie la déclaration d'âge, et un accès fermé est expliqué", async ({ page }) => {
+  let corps: { data?: Record<string, unknown>; email?: string } = {};
+  await page.route('**/auth/v1/signup**', (route) => {
+    corps = route.request().postDataJSON();
+    return route.fulfill({
+      status: 422,
+      // Forme d'une réponse d'erreur de Supabase Auth, sans en-tête de version d'API.
+      json: {
+        code: 422,
+        error_code: 'anonymous_provider_disabled',
+        msg: 'Anonymous sign-ins are disabled',
+      },
+    });
+  });
+  await page.goto('/bienvenue');
+  await page.getByLabel('J’ai 15 ans ou plus').check();
+  await page.getByRole('button', { name: 'Commencer' }).click();
+  await expect(page.getByRole('alert')).toContainText('L’accès libre est fermé');
+  expect(corps.data).toEqual({ declares_15_plus: true });
+  expect(corps.email).toBeUndefined();
+});
+
+test('un service injoignable donne un message clair', async ({ page }) => {
   await page.route('**/auth/v1/**', (route) => route.abort());
-  await page.goto('/connexion');
-  await page.getByLabel('Adresse e-mail').fill('lina@example.test');
-  await page.getByLabel('Mot de passe', { exact: true }).fill('x');
-  await page.getByRole('button', { name: 'Me connecter' }).click();
+  await page.goto('/bienvenue');
+  await page.getByLabel('J’ai 15 ans ou plus').check();
+  await page.getByRole('button', { name: 'Commencer' }).click();
   await expect(page.getByRole('alert')).toContainText('ne répond pas');
 });
 

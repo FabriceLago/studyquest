@@ -24,6 +24,7 @@ Préparé le 5 novembre 2026, avant toute mise en ligne. Les projets de pages l�
 8. **Médiation de la consommation :** quel médiateur choisir, et quelles mentions ajouter ?
 9. **Éditeur :** que faut-il publier dans les mentions légales si l'éditeur est une personne physique, sans société ?
 10. **Conservation :** quelles durées retenir pour les comptes inactifs, les sauvegardes et les journaux techniques ?
+11. **Utilisation sans compte (depuis le 7 novembre 2026) :** l'élève coche « J'ai 15 ans ou plus » puis commence. Une session anonyme, gardée par son navigateur, remplace le compte, sans e-mail. Cette case suffit-elle ? Comment répondre à une demande d'accès ou de portabilité alors qu'on ne peut pas identifier la personne autrement que par son navigateur ? Combien de temps garder les données d'une session abandonnée ?
 
 ## Pièces à joindre
 

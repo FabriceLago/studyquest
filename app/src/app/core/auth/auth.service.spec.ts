@@ -7,8 +7,7 @@ function client(overrides: Record<string, unknown> = {}) {
     auth: {
       onAuthStateChange: (callback: (event: string, session: null) => void) =>
         callback('INITIAL_SESSION', null),
-      signUp: vi.fn(async () => ({ data: { session: null }, error: null })),
-      signInWithPassword: vi.fn(async () => ({ error: null })),
+      signInAnonymously: vi.fn(async () => ({ data: {}, error: null })),
       signOut: vi.fn(async () => ({ error: null })),
       ...overrides,
     },
@@ -37,46 +36,41 @@ describe('AuthService', () => {
     await TestBed.inject(AuthService).whenReady;
   });
 
-  it("l'inscription envoie le pseudo et la déclaration d'âge", async () => {
+  it("la session anonyme envoie la déclaration d'âge", async () => {
     const supabase = client();
-    const result = await service(supabase).signUp('a@example.test', 'mot de passe long', 'Lina');
-    expect(result).toEqual({ ok: true, needsConfirmation: true });
-    const appel = supabase.auth.signUp.mock.calls[0] as unknown as [{ options: { data: unknown } }];
-    expect(appel[0].options.data).toEqual({ pseudo: 'Lina', declares_15_plus: true });
+    expect(await service(supabase).commencer()).toEqual({ ok: true });
+    const appel = supabase.auth.signInAnonymously.mock.calls[0] as unknown as [
+      { options: { data: unknown } },
+    ];
+    expect(appel[0].options.data).toEqual({ declares_15_plus: true });
   });
 
-  it('une adresse déjà inscrite reçoit la même réponse qu’une nouvelle', async () => {
+  it('un accès libre fermé côté serveur est expliqué', async () => {
     const supabase = client({
-      signUp: vi.fn(async () => ({
-        data: { session: null },
-        error: { code: 'user_already_exists' },
+      signInAnonymously: vi.fn(async () => ({
+        data: {},
+        error: { code: 'anonymous_provider_disabled' },
       })),
     });
-    expect(await service(supabase).signUp('a@example.test', 'mot de passe long', 'Lina')).toEqual({
-      ok: true,
-      needsConfirmation: true,
+    expect(await service(supabase).commencer()).toEqual({
+      ok: false,
+      message: authMessage({ code: 'anonymous_provider_disabled' }),
     });
-  });
-
-  it('une adresse non confirmée est signalée à la connexion', async () => {
-    const supabase = client({
-      signInWithPassword: vi.fn(async () => ({ error: { code: 'email_not_confirmed' } })),
-    });
-    const result = await service(supabase).signIn('a@example.test', 'x');
-    expect(result).toMatchObject({ ok: false, unconfirmed: true });
   });
 
   it('un échec réseau donne un message compréhensible', async () => {
     const supabase = client({
-      signInWithPassword: vi.fn(async () => {
+      signInAnonymously: vi.fn(async () => {
         throw new Error('réseau');
       }),
     });
-    const result = await service(supabase).signIn('a@example.test', 'x');
-    expect(result).toEqual({ ok: false, message: authMessage({ status: 0 }) });
+    expect(await service(supabase).commencer()).toEqual({
+      ok: false,
+      message: authMessage({ status: 0 }),
+    });
   });
 
-  it('la suppression du compte appelle le serveur puis ferme la session', async () => {
+  it('la suppression des données appelle le serveur puis oublie la session', async () => {
     const supabase = client();
     expect((await service(supabase).deleteAccount()).ok).toBe(true);
     expect(supabase.rpc).toHaveBeenCalledWith('delete_my_account');

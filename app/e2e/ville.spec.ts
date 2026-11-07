@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { Page, expect, test } from '@playwright/test';
-import { exigeSupabase, importer, inscrireEtConfirmer, repondreJuste, sansDefaut } from './aide';
+import { exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
 
 /** Étape 6 : la carte reflète la maîtrise réelle, avec une liste textuelle équivalente. */
 test.beforeEach(async ({ request }, info) => {
@@ -34,10 +34,9 @@ async function repondreAToutes(page: Page, nombre: number) {
 
 test('la ville reflète la maîtrise réelle, avec une liste textuelle équivalente', async ({
   page,
-  request,
 }) => {
-  const email = await inscrireEtConfirmer(page, request);
-  const compte = `(select id from auth.users where email = '${email}')`;
+  const email = await commencer(page);
+  const compte = `'${email}'`;
   const notion1 = `(select q.id from public.questions q join public.notions n on n.id = q.notion_id where n.titre = 'Notion 1' and q.owner = ${compte})`;
   await importer(page);
 
