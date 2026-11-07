@@ -65,11 +65,16 @@ type QuestionSession = QuestionMission & { readonly mission: MissionSession };
                 À revoir, elle reviendra demain
               }
             </strong>
-            <p>{{ r.explication }}</p>
-            <blockquote>
-              <cite>Dans ton cours, {{ q.cours }}</cite>
-              {{ r.extrait }}
-            </blockquote>
+            @if (r.explication) {
+              <p>{{ r.explication }}</p>
+            }
+            <!-- Une question écrite à la main ne cite aucun extrait. -->
+            @if (r.extrait) {
+              <blockquote>
+                <cite>Dans ton cours, {{ q.cours }}</cite>
+                {{ r.extrait }}
+              </blockquote>
+            }
             <button type="button" class="lien" [disabled]="retiree()" (click)="retirer(q.id)">
               {{ retiree() ? 'Question retirée de tes révisions' : 'Cette question est fausse' }}
             </button>

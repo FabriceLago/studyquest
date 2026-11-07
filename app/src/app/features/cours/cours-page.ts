@@ -70,8 +70,15 @@ const REPRISE_MS = 10 * 60 * 1000;
         }
         @case ('pret') {
           <p class="intro" role="status">
-            {{ total() }} questions prêtes. Retire celles qui te semblent fausses.
+            {{ total() }} questions prêtes.{{
+              c.format === 'manuel' ? '' : ' Retire celles qui te semblent fausses.'
+            }}
           </p>
+          @if (c.format === 'manuel' && !c.partage_de) {
+            <a class="btn btn-secondary bloc" [routerLink]="['/cours', c.id, 'ecrire']">
+              Ajouter des notions
+            </a>
+          }
 
           <section class="bloc" aria-labelledby="t-examen">
             <h2 id="t-examen">Date d’examen</h2>
@@ -177,7 +184,9 @@ const REPRISE_MS = 10 * 60 * 1000;
                   <li>
                     <p class="hint">{{ libelle(question.type) }}</p>
                     <p>{{ question.enonce }}</p>
-                    <blockquote>{{ question.extrait }}</blockquote>
+                    @if (question.extrait) {
+                      <blockquote>{{ question.extrait }}</blockquote>
+                    }
                     <button
                       type="button"
                       class="lien"

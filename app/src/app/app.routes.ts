@@ -13,6 +13,7 @@ const compteRequis: CanActivateFn = async () => {
 
 const authPage = () => import('./features/compte/auth-page').then((m) => m.AuthPage);
 const sessionPage = () => import('./features/session/session-page').then((m) => m.SessionPage);
+const ecrirePage = () => import('./features/cours/ecrire-page').then((m) => m.EcrirePage);
 
 export const routes: Routes = [
   {
@@ -83,6 +84,18 @@ export const routes: Routes = [
     title: 'Importer un cours, StudyQuest',
     canActivate: [compteRequis],
     loadComponent: () => import('./features/cours/importer-page').then((m) => m.ImporterPage),
+  },
+  {
+    path: 'cours/ecrire',
+    title: 'Écrire mes questions, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: ecrirePage,
+  },
+  {
+    path: 'cours/:id/ecrire',
+    title: 'Ajouter des notions, StudyQuest',
+    canActivate: [compteRequis],
+    loadComponent: ecrirePage,
   },
   {
     path: 'cours/rejoindre',

@@ -8,8 +8,10 @@ insert into auth.users (id, email, raw_user_meta_data) values
 create function pg_temp.a(p_heure text) returns timestamptz language sql as $$
   select ((now() at time zone 'Europe/Paris')::date + p_heure::time) at time zone 'Europe/Paris'
 $$;
+-- Seulement les comptes du test : la base locale garde ceux des parcours de bout en bout.
 create function pg_temp.envoyes(p_heure text) returns int language sql as $$
   select count(*)::int from public.rappels_a_envoyer(pg_temp.a(p_heure))
+  where owner in ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000f2')
 $$;
 
 set local role authenticated;

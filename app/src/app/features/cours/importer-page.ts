@@ -7,6 +7,10 @@ import { CoursService, Format, reduirePhoto, validerImport } from '../../core/co
   imports: [RouterLink],
   template: `
     <h1>Importer un cours</h1>
+    <p class="intro">
+      Pas de document sous la main ?
+      <a routerLink="/cours/ecrire">Écrire mes questions moi-même</a>
+    </p>
     <form class="form" novalidate (submit)="envoyer($event)">
       <div class="field">
         <label for="titre">Titre du cours</label>

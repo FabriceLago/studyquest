@@ -8,7 +8,8 @@ export type Statut = 'en_attente' | 'transcription' | 'a_relire' | 'generation' 
 export interface Cours {
   readonly id: string;
   readonly titre: string;
-  readonly format: Format;
+  /** « manuel » : écrit à la main, sans import. */
+  readonly format: Format | 'manuel';
   readonly statut: Statut;
   readonly raison: string | null;
   readonly texte: string | null;
@@ -103,9 +104,106 @@ export function messageRejoindre(code: string | undefined): string {
   return 'Le cours n’a pas pu être ajouté. Réessaie plus tard.';
 }
 
-/** Plusieurs questions citent souvent le même passage du cours. */
+/** Plusieurs questions citent souvent le même passage du cours. Une question écrite à la main n'en cite aucun. */
 export function extraitsUniques(notion: Pick<NotionVue, 'questions'>): string[] {
-  return [...new Set(notion.questions.map((q) => q.extrait))];
+  return [...new Set(notion.questions.map((q) => q.extrait).filter(Boolean))];
+}
+
+/** Limites des cours écrits à la main, reprises de regles() : le serveur les revérifie. */
+export const ECRITURE = {
+  notions: 12,
+  questions: 20,
+  choix: 6,
+  enonce: 300,
+  choixLongueur: 150,
+  texte: 300,
+} as const;
+
+export interface ChoixEcrit {
+  texte: string;
+  correcte: boolean;
+}
+
+/** Modifiée sur place par le formulaire, comme les deux types suivants. */
+export interface QuestionEcrite {
+  enonce: string;
+  explication: string;
+  vraiFaux: boolean;
+  vrai: boolean;
+  choix: ChoixEcrit[];
+}
+
+export interface NotionEcrite {
+  titre: string;
+  aRetenir: string;
+  questions: QuestionEcrite[];
+}
+
+export const nouvelleQuestion = (): QuestionEcrite => ({
+  enonce: '',
+  explication: '',
+  vraiFaux: false,
+  vrai: true,
+  choix: [0, 1, 2].map(() => ({ texte: '', correcte: false })),
+});
+
+export const nouvelleNotion = (): NotionEcrite => ({
+  titre: '',
+  aRetenir: '',
+  questions: [nouvelleQuestion()],
+});
+
+/** Renvoie l'erreur à afficher, ou null. Un choix laissé vide est ignoré. Titre nul : ajout à un cours. */
+export function validerEcriture(
+  titre: string | null,
+  notions: readonly NotionEcrite[],
+): string | null {
+  if (titre !== null && (titre.trim().length === 0 || titre.trim().length > 120))
+    return 'Donne un titre à ce cours (120 caractères au plus).';
+  if (notions.length === 0) return 'Ajoute au moins une notion.';
+  for (const [i, notion] of notions.entries()) {
+    const ou = `Notion ${i + 1}`;
+    if (!notion.titre.trim()) return `${ou} : donne-lui un titre.`;
+    if (!notion.aRetenir.trim()) return `${ou} : écris ce qu’il faut en retenir.`;
+    if (notion.questions.length === 0) return `${ou} : ajoute au moins une question.`;
+    for (const [j, question] of notion.questions.entries()) {
+      const ici = `${ou}, question ${j + 1}`;
+      if (!question.enonce.trim()) return `${ici} : écris la question.`;
+      if (question.vraiFaux) continue;
+      if (question.choix.some((c) => c.correcte && !c.texte.trim()))
+        return `${ici} : une bonne réponse cochée est vide.`;
+      const remplis = question.choix.map((c) => c.texte.trim()).filter(Boolean);
+      if (remplis.length < 2) return `${ici} : écris au moins deux choix.`;
+      if (new Set(remplis.map((t) => t.toLowerCase())).size < remplis.length)
+        return `${ici} : deux choix sont identiques.`;
+      if (!question.choix.some((c) => c.correcte))
+        return `${ici} : coche au moins une bonne réponse.`;
+    }
+  }
+  return null;
+}
+
+/** Ce que reçoit ecrire_cours : textes rognés, choix vides retirés. */
+export function versEnvoi(notions: readonly NotionEcrite[]) {
+  return notions.map((n) => ({
+    titre: n.titre.trim(),
+    a_retenir: n.aRetenir.trim(),
+    questions: n.questions.map((q) => {
+      const commun = { enonce: q.enonce.trim(), explication: q.explication.trim() || null };
+      if (q.vraiFaux) return { ...commun, vrai: q.vrai };
+      const choix = q.choix
+        .filter((c) => c.texte.trim())
+        .map((c) => ({ texte: c.texte.trim(), correcte: c.correcte }));
+      return { ...commun, choix };
+    }),
+  }));
+}
+
+export function messageEcriture(code: string | undefined): string {
+  if (code === 'SQ429')
+    return `Limite atteinte : ${ECRITURE.notions} notions par cours, 100 cours écrits à la main.`;
+  if (code === 'SQ404') return 'Ce cours ne peut pas recevoir de nouvelles notions.';
+  return 'Le cours n’a pas pu être enregistré. Vérifie ta connexion, puis réessaie.';
 }
 
 /** La date du jour de l'élève, au format d'un champ de date. */
@@ -189,6 +287,21 @@ export class CoursService {
     }
     await this.lancer(id);
     return { id };
+  }
+
+  /** Crée un cours écrit à la main (cours nul) ou lui ajoute des notions. Ni IA ni quota. */
+  async ecrire(
+    cours: string | null,
+    titre: string | null,
+    notions: readonly NotionEcrite[],
+  ): Promise<{ id: string } | { erreur: string }> {
+    const supabase = await this.client;
+    const { data, error } = await supabase.rpc('ecrire_cours', {
+      p_cours: cours,
+      p_titre: titre?.trim() ?? null,
+      p_notions: versEnvoi(notions),
+    });
+    return error ? { erreur: messageEcriture(error.code) } : { id: data };
   }
 
   /** Démarre, reprend ou poursuit après relecture. Une erreur ici se voit dans le statut du cours. */

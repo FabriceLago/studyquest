@@ -135,6 +135,9 @@ const ETATS: Record<Statut, string> = {
       routerLink="/cours/importer"
       >Importer un cours</a
     >
+    @if (charge() && cours().length === 0) {
+      <p class="bloc"><a routerLink="/cours/ecrire">Écrire mes questions moi-même</a></p>
+    }
     <p class="bloc"><a routerLink="/cours/rejoindre">J’ai un code de cours</a></p>
     <p class="bloc"><a routerLink="/duel/rejoindre">J’ai un code de duel</a></p>
     <p class="bloc"><a routerLink="/groupes">Mes groupes et classements</a></p>
