@@ -82,10 +82,7 @@ import { Avatar } from '../../shared/avatar';
           </button>
         }
       } @else {
-        <p class="hint">
-          Les notifications ne sont pas disponibles ici. Installe l’application sur ton téléphone
-          pour les recevoir.
-        </p>
+        <p class="hint">Les rappels par notification ne sont pas disponibles ici pour l’instant.</p>
       }
       <p role="status" class="hint">{{ messageRappel() }}</p>
     </section>

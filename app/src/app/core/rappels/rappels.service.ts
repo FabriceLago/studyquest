@@ -10,8 +10,8 @@ export class RappelsService {
   private readonly swPush = inject(SwPush);
   private readonly client = inject(SUPABASE);
   private readonly auth = inject(AuthService);
-  /** Faux sans service worker : application non installée, développement, tests. */
-  readonly disponible = this.swPush.isEnabled;
+  /** Faux sans service worker (développement, tests) ou sans clé VAPID pour ce déploiement. */
+  readonly disponible = this.swPush.isEnabled && environment.vapidPublicKey !== '';
 
   /** Heure du rappel (« 18:00 »), ou null s'il est arrêté. */
   async heure(): Promise<string | null> {

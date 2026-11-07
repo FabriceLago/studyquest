@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build:deploiement",
+  "outputDirectory": "dist/studyquest/browser",
   "rewrites": [{ "source": "/((?!.*\\.).*)", "destination": "/index.html" }],
   "headers": [
     {
