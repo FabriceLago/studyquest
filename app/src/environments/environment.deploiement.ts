@@ -5,8 +5,8 @@
  * du serveur qui protègent les données.
  */
 export const environment = {
-  supabaseUrl: 'https://obpbzbeoiwbdwkaugsgs.supabase.co',
-  supabasePublishableKey: 'sb_publishable_Zy08FuN0A8_Wrun9esDuUA_gto-XIoi',
+  supabaseUrl: 'https://dqremdjbtcvlvfuuxmbr.supabase.co',
+  supabasePublishableKey: 'sb_publishable_GROXRsdmQQY0rV1IPO3a5Q_77m7PHgz',
   /** Pas de captcha pour l'instant : à régler avant d'ouvrir largement les inscriptions. */
   turnstileSiteKey: '',
   /** Application gratuite : aucun paiement (demande du 5 novembre 2026). */
