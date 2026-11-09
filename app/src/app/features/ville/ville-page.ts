@@ -63,7 +63,7 @@ const ETATS = { batie: 'Bâtiment construit', chantier: 'En chantier', vide: 'À
       }
     } @else if (charge()) {
       <p class="intro">Ta ville est encore vide. Importe un cours pour poser ton premier quartier.</p>
-      <a class="btn btn-primary bloc" routerLink="/cours/importer">Importer un cours</a>
+      <a class="btn btn-primary bloc" routerLink="/cours/ecrire">Écrire un cours</a>
     }
   `,
 })

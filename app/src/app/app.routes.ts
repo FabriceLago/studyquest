@@ -1,6 +1,5 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, Routes } from '@angular/router';
-import { environment } from '../environments/environment';
 import { AuthService } from './core/auth/auth.service';
 
 /** Le contenu de l'élève demande une session : sans elle, direction Bienvenue. */
@@ -15,6 +14,8 @@ const sessionPage = () => import('./features/session/session-page').then((m) => 
 const ecrirePage = () => import('./features/cours/ecrire-page').then((m) => m.EcrirePage);
 
 export const routes: Routes = [
+  // Ancienne adresse d'import, avant cours/:id qui la prendrait pour un identifiant.
+  { path: 'cours/importer', redirectTo: 'cours/ecrire' },
   {
     path: '',
     pathMatch: 'full',
@@ -49,40 +50,8 @@ export const routes: Routes = [
   },
   {
     path: 'conditions',
-    title: environment.paiement
-      ? 'Conditions d’utilisation et de vente, StudyQuest'
-      : 'Conditions d’utilisation, StudyQuest',
+    title: 'Conditions d’utilisation, StudyQuest',
     loadComponent: () => import('./features/legal/pages-legales').then((m) => m.ConditionsPage),
-  },
-  // Sans paiement (environment.paiement), la page n'existe pas : son adresse mène à Aujourd'hui.
-  ...(environment.paiement
-    ? [
-        {
-          path: 'abonnement',
-          title: 'Abonnement, StudyQuest',
-          canActivate: [compteRequis],
-          loadComponent: () =>
-            import('./features/abonnement/abonnement-page').then((m) => m.AbonnementPage),
-        },
-      ]
-    : []),
-  {
-    path: 'groupes',
-    title: 'Mes groupes, StudyQuest',
-    canActivate: [compteRequis],
-    loadComponent: () => import('./features/groupes/groupes-page').then((m) => m.GroupesPage),
-  },
-  {
-    path: 'groupes/:id',
-    title: 'Classement du groupe, StudyQuest',
-    canActivate: [compteRequis],
-    loadComponent: () => import('./features/groupes/groupe-page').then((m) => m.GroupePage),
-  },
-  {
-    path: 'cours/importer',
-    title: 'Importer un cours, StudyQuest',
-    canActivate: [compteRequis],
-    loadComponent: () => import('./features/cours/importer-page').then((m) => m.ImporterPage),
   },
   {
     path: 'cours/ecrire',
@@ -95,12 +64,6 @@ export const routes: Routes = [
     title: 'Ajouter des notions, StudyQuest',
     canActivate: [compteRequis],
     loadComponent: ecrirePage,
-  },
-  {
-    path: 'cours/rejoindre',
-    title: 'Rejoindre un cours, StudyQuest',
-    canActivate: [compteRequis],
-    loadComponent: () => import('./features/cours/rejoindre-page').then((m) => m.RejoindrePage),
   },
   {
     path: 'cours/:id/examen',
@@ -119,19 +82,6 @@ export const routes: Routes = [
     title: 'Fiche de révision, StudyQuest',
     canActivate: [compteRequis],
     loadComponent: () => import('./features/cours/fiche-page').then((m) => m.FichePage),
-  },
-  {
-    path: 'duel/rejoindre',
-    title: 'Rejoindre un duel, StudyQuest',
-    canActivate: [compteRequis],
-    data: { duel: true },
-    loadComponent: () => import('./features/cours/rejoindre-page').then((m) => m.RejoindrePage),
-  },
-  {
-    path: 'duel/:id',
-    title: 'Duel, StudyQuest',
-    canActivate: [compteRequis],
-    loadComponent: () => import('./features/session/duel-page').then((m) => m.DuelPage),
   },
   {
     path: 'cours/:id',
@@ -171,7 +121,7 @@ export const routes: Routes = [
     title: 'Bienvenue, StudyQuest',
     loadComponent: () => import('./features/compte/bienvenue-page').then((m) => m.BienvenuePage),
   },
-  // Utilisation libre : il n'y a plus d'inscription ni de connexion.
+  // Anciennes adresses : il n'y a ni inscription, ni connexion, ni import.
   { path: 'connexion', redirectTo: 'bienvenue' },
   { path: 'inscription', redirectTo: 'bienvenue' },
   { path: '**', redirectTo: '' },

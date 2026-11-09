@@ -1,7 +1,6 @@
 import {
   QuestionMission,
   duree,
-  messageDuel,
   messageNotionFaible,
   niveau,
   reponseDonnee,
@@ -51,16 +50,6 @@ describe('messageNotionFaible', () => {
     expect(messageNotionFaible({ notion: 'N', questions: 4 })).toContain(
       '4 questions de « N » sont',
     );
-  });
-});
-
-describe('messageDuel', () => {
-  it('explique chaque refus', () => {
-    expect(messageDuel('SQ404')).toContain('aucun duel');
-    expect(messageDuel('SQ403')).toContain('recevoir ce cours');
-    expect(messageDuel('SQ429')).toContain('nombre de duels');
-    expect(messageDuel('SQ409')).toContain('ne permet pas');
-    expect(messageDuel(undefined)).toContain('Réessaie');
   });
 });
 

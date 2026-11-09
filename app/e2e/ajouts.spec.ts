@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { chiffres, exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
+import { chiffres, importer, commencer, repondreJuste, sansDefaut } from './aide';
 
-/** Parcours réels des ajouts du 4 novembre, avec Supabase et une IA simulée : aucune dépense. */
-test.beforeEach(async ({ request }, info) => {
-  test.skip(info.project.name !== 'mobile', 'Parcours lourds : sur mobile seulement');
-  await exigeSupabase(request);
+/** Ajouts du 4 novembre : mini-mission, date d’examen, examen blanc. */
+test.skip(({ isMobile }) => !isMobile, 'Parcours lourds : sur mobile seulement');
+test.beforeEach(() => {
   test.setTimeout(240_000);
 });
 
@@ -61,11 +60,6 @@ test('une date d’examen s’enregistre, se retire et refuse le passé', async 
 test('un examen blanc donne un score par notion, sans rien dévoiler ni rapporter', async ({
   page,
 }) => {
-  const lectures: string[] = [];
-  page.on('response', async (r) => {
-    if (/rpc\/(demarrer_examen|repondre_examen)/.test(r.url()))
-      lectures.push(await r.text().catch(() => ''));
-  });
   await commencer(page);
   await importer(page);
   await page.getByRole('link', { name: /Biologie/ }).click();
@@ -97,56 +91,4 @@ test('un examen blanc donne un score par notion, sans rien dévoiler ni rapporte
   await page.getByRole('link', { name: 'Revenir au cours' }).click();
   await page.getByRole('link', { name: 'Revenir à ma journée' }).click();
   await expect(page.getByText('0 / 100 XP vers le niveau 2')).toBeVisible();
-
-  expect(lectures.length).toBeGreaterThan(0);
-  expect(lectures.join('')).not.toMatch(/correctes|"associations"|"ordre"|explication|extrait/);
-});
-
-test('un code de partage donne une copie à une autre personne, sans quota', async ({
-  page,
-  browser,
-}) => {
-  await commencer(page);
-  await importer(page);
-  await page.getByRole('link', { name: /Biologie/ }).click();
-  const obtenir = page.getByRole('button', { name: 'Obtenir un code' });
-  await expect(obtenir).toBeDisabled();
-  await page.getByLabel(/j’ai le droit de le partager/).check();
-  await obtenir.click();
-  const code = ((await page.locator('.code-partage').textContent()) ?? '').trim();
-  expect(code).toMatch(/^[0-9A-F]{12}$/);
-  await sansDefaut(page);
-
-  const contexte = await browser.newContext({
-    baseURL: 'http://localhost:4221',
-    serviceWorkers: 'block',
-  });
-  const autre = await contexte.newPage();
-  await commencer(autre);
-  await autre.getByRole('link', { name: 'J’ai un code de cours' }).click();
-  const champ = autre.getByLabel('Code du cours');
-  await champ.fill('INCONNU');
-  await autre.getByRole('button', { name: 'Recevoir le cours' }).click();
-  await expect(autre.getByRole('alert')).toContainText('n’existe pas');
-  await sansDefaut(autre);
-
-  await champ.fill(code.toLowerCase());
-  await autre.getByRole('button', { name: 'Recevoir le cours' }).click();
-  await expect(autre.getByText('12 questions prêtes')).toBeVisible();
-  await expect(autre.getByText('Tu as reçu ce cours avec un code de partage.')).toBeVisible();
-  await expect(autre.getByRole('button', { name: 'Obtenir un code' })).toBeHidden();
-  await autre.getByRole('link', { name: 'Revenir à ma journée' }).click();
-  await expect(autre.getByText('0 import sur 5')).toBeVisible();
-  await expect(autre.getByRole('link', { name: /Découvrir.*8 nouvelles questions/ })).toBeVisible();
-
-  // Arrêter le partage empêche les nouvelles copies, celles déjà reçues restent.
-  await page.getByRole('button', { name: 'Arrêter le partage' }).click();
-  await expect(obtenir).toBeVisible();
-  await autre.goto('/cours/rejoindre');
-  await champ.fill(code);
-  await autre.getByRole('button', { name: 'Recevoir le cours' }).click();
-  await expect(autre.getByRole('alert')).toContainText('n’existe pas');
-  await autre.goto('/');
-  await expect(autre.getByRole('link', { name: /Biologie/ })).toBeVisible();
-  await contexte.close();
 });

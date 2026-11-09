@@ -1,26 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { AuthService } from '../auth/auth.service';
-import { SUPABASE } from '../supabase/supabase';
-
-export type Format = 'pdf' | 'photos' | 'texte';
-export type Statut = 'en_attente' | 'transcription' | 'a_relire' | 'generation' | 'pret' | 'echec';
+import * as base from '../local/base';
+import type { NotionEnvoyee } from '../local/base';
+import { Store } from '../local/store';
 
 export interface Cours {
   readonly id: string;
   readonly titre: string;
-  /** « manuel » : écrit à la main, sans import. */
-  readonly format: Format | 'manuel';
-  readonly statut: Statut;
-  readonly raison: string | null;
-  readonly texte: string | null;
-  readonly updated_at: string;
   readonly date_examen: string | null;
-  readonly code_partage: string | null;
-  readonly partage_de: string | null;
 }
-
-const CHAMPS_COURS =
-  'id, titre, format, statut, raison, texte, updated_at, date_examen, code_partage, partage_de';
 
 export interface QuestionVue {
   readonly id: string;
@@ -37,79 +24,12 @@ export interface NotionVue {
   readonly questions: readonly QuestionVue[];
 }
 
-export interface Brouillon {
-  readonly titre: string;
-  readonly format: Format;
-  readonly fichiers: readonly {
-    readonly nom: string;
-    readonly taille: number;
-    readonly type: string;
-  }[];
-  readonly texte: string;
-}
-
-const MO = 1024 * 1024;
-
-/** Limites du § 4 de la spécification ; le serveur les revérifie. Renvoie l'erreur à afficher. */
-export function validerImport(b: Brouillon): string | null {
-  if (b.titre.trim().length === 0 || b.titre.trim().length > 120)
-    return 'Donne un titre à ce cours (120 caractères au plus).';
-  if (b.format === 'texte') {
-    if (b.texte.trim().length < 200)
-      return 'Colle au moins quelques phrases de cours (200 caractères).';
-    if (b.texte.length > 60_000) return 'Ce texte dépasse 60 000 caractères.';
-    return null;
-  }
-  if (b.fichiers.length === 0)
-    return b.format === 'pdf' ? 'Choisis un fichier PDF.' : 'Choisis au moins une photo.';
-  if (b.format === 'pdf') {
-    if (b.fichiers.length > 1 || b.fichiers[0].type !== 'application/pdf')
-      return 'Choisis un seul fichier PDF.';
-    if (b.fichiers[0].taille > 20 * MO) return 'Ce PDF dépasse 20 Mo.';
-    return null;
-  }
-  if (b.fichiers.length > 30) return 'Choisis 30 photos au plus.';
-  if (b.fichiers.some((f) => !f.type.startsWith('image/'))) return 'Choisis uniquement des photos.';
-  return null;
-}
-
-/** Une photo réduite à 1 600 px avant l'envoi, comme prévu par la spécification. */
-export async function reduirePhoto(fichier: Blob): Promise<Blob> {
-  const image = await createImageBitmap(fichier);
-  const echelle = Math.min(1, 1600 / Math.max(image.width, image.height));
-  const canevas = document.createElement('canvas');
-  canevas.width = Math.round(image.width * echelle);
-  canevas.height = Math.round(image.height * echelle);
-  canevas.getContext('2d')?.drawImage(image, 0, 0, canevas.width, canevas.height);
-  image.close();
-  return new Promise((resolve, reject) =>
-    canevas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Photo illisible'))),
-      'image/jpeg',
-      0.85,
-    ),
-  );
-}
-
-export function messageCreation(code: string | undefined): string {
-  if (code === 'SQ409') return 'Un import est déjà en cours : attends qu’il se termine.';
-  if (code === 'SQ429') return 'Tu as atteint ton nombre d’imports pour ce mois-ci.';
-  return 'L’import n’a pas pu démarrer. Réessaie plus tard.';
-}
-
-export function messageRejoindre(code: string | undefined): string {
-  if (code === 'SQ404') return 'Ce code n’existe pas ou n’est plus actif.';
-  if (code === 'SQ409') return 'Ce cours est déjà le tien.';
-  if (code === 'SQ429') return 'Ce code a atteint son nombre de personnes.';
-  return 'Le cours n’a pas pu être ajouté. Réessaie plus tard.';
-}
-
 /** Plusieurs questions citent souvent le même passage du cours. Une question écrite à la main n'en cite aucun. */
 export function extraitsUniques(notion: Pick<NotionVue, 'questions'>): string[] {
   return [...new Set(notion.questions.map((q) => q.extrait).filter(Boolean))];
 }
 
-/** Limites des cours écrits à la main, reprises de regles() : le serveur les revérifie. */
+/** Limites des cours écrits à la main. */
 export const ECRITURE = {
   notions: 12,
   questions: 20,
@@ -183,8 +103,8 @@ export function validerEcriture(
   return null;
 }
 
-/** Ce que reçoit ecrire_cours : textes rognés, choix vides retirés. */
-export function versEnvoi(notions: readonly NotionEcrite[]) {
+/** Ce que reçoit ecrireCours : textes rognés, choix vides retirés. */
+export function versEnvoi(notions: readonly NotionEcrite[]): NotionEnvoyee[] {
   return notions.map((n) => ({
     titre: n.titre.trim(),
     a_retenir: n.aRetenir.trim(),
@@ -199,11 +119,8 @@ export function versEnvoi(notions: readonly NotionEcrite[]) {
   }));
 }
 
-export function messageEcriture(code: string | undefined): string {
-  if (code === 'SQ429')
-    return `Limite atteinte : ${ECRITURE.notions} notions par cours, 100 cours écrits à la main.`;
-  if (code === 'SQ404') return 'Ce cours ne peut pas recevoir de nouvelles notions.';
-  return 'Le cours n’a pas pu être enregistré. Vérifie ta connexion, puis réessaie.';
+export function messageEcriture(): string {
+  return `Limite atteinte : ${ECRITURE.notions} notions par cours.`;
 }
 
 /** La date du jour de l'élève, au format d'un champ de date. */
@@ -221,135 +138,64 @@ export function libelleExamen(date: string | null, maintenant = new Date()): str
   return jours === 1 ? 'Examen demain' : `Examen dans ${jours} jours`;
 }
 
+/** Les cours de l'élève, écrits à la main et gardés dans ce navigateur. */
 @Injectable({ providedIn: 'root' })
 export class CoursService {
-  private readonly client = inject(SUPABASE);
-  private readonly auth = inject(AuthService);
+  private readonly store = inject(Store);
 
+  /** Du plus récent au plus ancien. */
   async liste(): Promise<Cours[]> {
-    const supabase = await this.client;
-    const { data } = await supabase
-      .from('courses')
-      .select(CHAMPS_COURS)
-      .order('created_at', { ascending: false });
-    return (data ?? []) as Cours[];
-  }
-
-  async quota(): Promise<{ pretes: number; total: number }> {
-    const supabase = await this.client;
-    const mois = `${new Date().toISOString().slice(0, 7)}-01`;
-    const [{ data: usage }, { data: total }] = await Promise.all([
-      supabase.from('import_usage').select('pretes').eq('mois', mois).maybeSingle(),
-      supabase.rpc('quota_imports_mensuel'),
-    ]);
-    return { pretes: usage?.pretes ?? 0, total: total ?? 0 };
+    return [...this.store.lire().cours]
+      .sort((a, b) => b.cree.localeCompare(a.cree))
+      .map(({ id, titre, date_examen }) => ({ id, titre, date_examen }));
   }
 
   async lire(id: string): Promise<Cours | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.from('courses').select(CHAMPS_COURS).eq('id', id).maybeSingle();
-    return data as Cours | null;
+    return (await this.liste()).find((c) => c.id === id) ?? null;
   }
 
   async notions(id: string): Promise<NotionVue[]> {
-    const supabase = await this.client;
-    const { data } = await supabase
-      .from('notions')
-      .select('id, titre, carte_recto, carte_verso, questions(id, type, enonce, extrait, ordre)')
-      .eq('course_id', id)
-      .order('ordre')
-      .order('ordre', { referencedTable: 'questions' });
-    return (data ?? []) as NotionVue[];
+    const e = this.store.lire();
+    return e.notions
+      .filter((n) => n.cours === id)
+      .sort((a, b) => a.ordre - b.ordre)
+      .map((n) => ({
+        id: n.id,
+        titre: n.titre,
+        carte_recto: n.recto,
+        carte_verso: n.verso,
+        questions: e.questions
+          .filter((q) => q.notion === n.id)
+          .sort((a, b) => a.ordre - b.ordre)
+          .map((q) => ({ id: q.id, type: q.type, enonce: q.enonce, extrait: '' })),
+      }));
   }
 
-  /** Crée le cours, dépose les fichiers, puis lance l'import. Renvoie l'identifiant ou l'erreur. */
-  async importer(
-    titre: string,
-    format: Format,
-    fichiers: readonly Blob[],
-    texte: string,
-  ): Promise<{ id: string } | { erreur: string }> {
-    const supabase = await this.client;
-    const { data: id, error } = await supabase.rpc('creer_import', {
-      p_titre: titre.trim(),
-      p_format: format,
-      p_texte: format === 'texte' ? texte : null,
-    });
-    if (error) return { erreur: messageCreation(error.code) };
-    const dossier = `${this.auth.userId()}/${id}`;
-    for (const [i, fichier] of fichiers.entries()) {
-      const nom = `${String(i + 1).padStart(2, '0')}.${format === 'pdf' ? 'pdf' : 'jpg'}`;
-      const { error: envoi } = await supabase.storage
-        .from('imports')
-        .upload(`${dossier}/${nom}`, fichier);
-      if (envoi)
-        return { erreur: 'L’envoi du fichier a échoué. Vérifie ta connexion, puis réessaie.' };
-    }
-    await this.lancer(id);
-    return { id };
-  }
-
-  /** Crée un cours écrit à la main (cours nul) ou lui ajoute des notions. Ni IA ni quota. */
+  /** Crée un cours (cours nul) ou lui ajoute des notions. Renvoie l'identifiant ou l'erreur. */
   async ecrire(
     cours: string | null,
     titre: string | null,
     notions: readonly NotionEcrite[],
   ): Promise<{ id: string } | { erreur: string }> {
-    const supabase = await this.client;
-    const { data, error } = await supabase.rpc('ecrire_cours', {
-      p_cours: cours,
-      p_titre: titre?.trim() ?? null,
-      p_notions: versEnvoi(notions),
-    });
-    return error ? { erreur: messageEcriture(error.code) } : { id: data };
-  }
-
-  /** Démarre, reprend ou poursuit après relecture. Une erreur ici se voit dans le statut du cours. */
-  async lancer(id: string): Promise<void> {
-    const supabase = await this.client;
-    await supabase.functions.invoke('import-cours', { body: { cours: id } });
-  }
-
-  async corriger(id: string, texte: string): Promise<boolean> {
-    const supabase = await this.client;
-    const { error } = await supabase.rpc('corriger_transcription', { p_id: id, p_texte: texte });
-    return !error;
+    const deja = cours ? (await this.notions(cours)).length : 0;
+    if (deja + notions.length > ECRITURE.notions) return { erreur: messageEcriture() };
+    const id = this.store.modifier((e) =>
+      base.ecrireCours(e, cours, titre, versEnvoi(notions), Date.now()),
+    );
+    return id ? { id } : { erreur: 'Ce cours n’existe plus.' };
   }
 
   async fixerExamen(id: string, date: string | null): Promise<boolean> {
-    const supabase = await this.client;
-    const { error } = await supabase.rpc('fixer_examen', { p_cours: id, p_date: date });
-    return !error;
-  }
-
-  /** Le code n'est donné qu'à qui déclare avoir le droit de partager ce cours. */
-  async partager(id: string): Promise<boolean> {
-    const supabase = await this.client;
-    const { error } = await supabase.rpc('partager_cours', { p_cours: id, p_droit: true });
-    return !error;
-  }
-
-  async arreterPartage(id: string): Promise<boolean> {
-    const supabase = await this.client;
-    const { error } = await supabase.rpc('arreter_partage', { p_cours: id });
-    return !error;
-  }
-
-  async rejoindre(code: string): Promise<{ id: string } | { erreur: string }> {
-    const supabase = await this.client;
-    const { data, error } = await supabase.rpc('rejoindre_cours', { p_code: code });
-    return error ? { erreur: messageRejoindre(error.code) } : { id: data };
+    return this.store.modifier((e) => base.fixerExamen(e, id, date, Date.now()));
   }
 
   async supprimerQuestion(id: string): Promise<boolean> {
-    const supabase = await this.client;
-    const { error } = await supabase.from('questions').delete().eq('id', id);
-    return !error;
+    this.store.modifier((e) => base.supprimerQuestion(e, id));
+    return true;
   }
 
   async supprimerCours(id: string): Promise<boolean> {
-    const supabase = await this.client;
-    const { error } = await supabase.from('courses').delete().eq('id', id);
-    return !error;
+    this.store.modifier((e) => base.supprimerCours(e, id));
+    return true;
   }
 }

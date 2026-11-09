@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { Page, expect, test } from '@playwright/test';
 
-/** Parcours sans Supabase : les appels au service sont simulés ou coupés. */
+/** Le socle : Bienvenue, la déclaration d’âge, aucune donnée envoyée, l’installation. */
 async function sansDefaut(page: Page) {
   expect(
     await page.evaluate(
@@ -26,49 +26,28 @@ test('sans session, le contenu mène à Bienvenue, et les anciennes pages de com
   }
 });
 
-test("sans déclaration d'âge, rien ne part vers le serveur", async ({ page }) => {
-  let appels = 0;
-  await page.route('**/auth/v1/signup**', (route) => {
-    appels++;
-    return route.abort();
-  });
+test("sans déclaration d'âge, rien ne commence", async ({ page }) => {
   await page.goto('/bienvenue');
   await page.getByRole('button', { name: 'Commencer' }).click();
   await expect(page.getByRole('alert')).toHaveText(
     'StudyQuest est réservé aux personnes de 15 ans et plus.',
   );
-  expect(appels).toBe(0);
+  expect(await page.evaluate(() => localStorage.getItem('studyquest'))).toBeNull();
   await sansDefaut(page);
 });
 
-test("Commencer envoie la déclaration d'âge, et un accès fermé est expliqué", async ({ page }) => {
-  let corps: { data?: Record<string, unknown>; email?: string } = {};
-  await page.route('**/auth/v1/signup**', (route) => {
-    corps = route.request().postDataJSON();
-    return route.fulfill({
-      status: 422,
-      // Forme d'une réponse d'erreur de Supabase Auth, sans en-tête de version d'API.
-      json: {
-        code: 422,
-        error_code: 'anonymous_provider_disabled',
-        msg: 'Anonymous sign-ins are disabled',
-      },
-    });
+test('aucune requête ne quitte le site : tout reste dans le navigateur', async ({ page }) => {
+  const ailleurs: string[] = [];
+  page.on('request', (r) => {
+    if (new URL(r.url()).origin !== 'http://localhost:4221') ailleurs.push(r.url());
   });
   await page.goto('/bienvenue');
   await page.getByLabel('J’ai 15 ans ou plus').check();
   await page.getByRole('button', { name: 'Commencer' }).click();
-  await expect(page.getByRole('alert')).toContainText('L’accès libre est fermé');
-  expect(corps.data).toEqual({ declares_15_plus: true });
-  expect(corps.email).toBeUndefined();
-});
-
-test('un service injoignable donne un message clair', async ({ page }) => {
-  await page.route('**/auth/v1/**', (route) => route.abort());
-  await page.goto('/bienvenue');
-  await page.getByLabel('J’ai 15 ans ou plus').check();
-  await page.getByRole('button', { name: 'Commencer' }).click();
-  await expect(page.getByRole('alert')).toContainText('ne répond pas');
+  await expect(page.getByRole('heading', { level: 1, name: 'Salut Joueur' })).toBeVisible();
+  await page.getByRole('link', { name: 'Ma ville' }).click();
+  await page.getByRole('link', { name: 'Profil' }).click();
+  expect(ailleurs).toEqual([]);
 });
 
 test("l'application est installable", async ({ request }) => {

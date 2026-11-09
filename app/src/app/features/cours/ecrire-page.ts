@@ -238,7 +238,7 @@ export class EcrirePage implements OnInit {
     if (id) {
       const [cours, notions] = await Promise.all([this.cours.lire(id), this.cours.notions(id)]);
       // Seul l'auteur d'un cours écrit à la main y ajoute des notions, pas une copie reçue.
-      const permis = cours?.format === 'manuel' && !cours.partage_de;
+      const permis = !!cours;
       this.titreCours.set(cours?.titre ?? '');
       this.place.set(permis ? ECRITURE.notions - notions.length : 0);
     }

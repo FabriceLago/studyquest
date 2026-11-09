@@ -1,26 +1,11 @@
-import { execFileSync } from 'node:child_process';
 import { Page, expect, test } from '@playwright/test';
-import { exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
+import { importer, commencer, reglerRevisions, repondreJuste, sansDefaut } from './aide';
 
 /** Étape 6 : la carte reflète la maîtrise réelle, avec une liste textuelle équivalente. */
-test.beforeEach(async ({ request }, info) => {
-  test.skip(info.project.name !== 'mobile', 'Parcours lourds : sur mobile seulement');
-  await exigeSupabase(request);
+test.skip(({ isMobile }) => !isMobile, 'Parcours lourds : sur mobile seulement');
+test.beforeEach(() => {
   test.setTimeout(240_000);
 });
-
-/** Avance le temps pour ce compte seulement, dans la base locale de StudyQuest. */
-function sql(requete: string) {
-  execFileSync('docker', [
-    'exec',
-    'supabase_db_studyquest',
-    'psql',
-    '-U',
-    'postgres',
-    '-c',
-    requete,
-  ]);
-}
 
 async function repondreAToutes(page: Page, nombre: number) {
   for (let i = 0; i < nombre; i++) {
@@ -35,9 +20,7 @@ async function repondreAToutes(page: Page, nombre: number) {
 test('la ville reflète la maîtrise réelle, avec une liste textuelle équivalente', async ({
   page,
 }) => {
-  const email = await commencer(page);
-  const compte = `'${email}'`;
-  const notion1 = `(select q.id from public.questions q join public.notions n on n.id = q.notion_id where n.titre = 'Notion 1' and q.owner = ${compte})`;
+  await commencer(page);
   await importer(page);
 
   // Avant toute réponse : trois terrains vides.
@@ -56,9 +39,7 @@ test('la ville reflète la maîtrise réelle, avec une liste textuelle équivale
   await expect(page.getByRole('button', { name: /En chantier/ })).toHaveCount(2);
 
   // Les questions de la notion 1 reviennent en révision : justes, elles passent en boîte 3.
-  sql(
-    `update public.reviews set boite = 2, echeance = current_date - 1 where owner = ${compte} and question_id in ${notion1}`,
-  );
+  await reglerRevisions(page, { notion: 'Notion 1', boite: 2 });
   await page.goto('/session/reviser');
   await repondreAToutes(page, 4);
   await expect(page.getByText('« Notion 1 » s’allume dans ta ville.')).toBeVisible();
@@ -85,9 +66,7 @@ test('la ville reflète la maîtrise réelle, avec une liste textuelle équivale
   await page.screenshot({ path: test.info().outputPath('ville.png'), fullPage: true });
 
   // Une question à revoir ajoute un repère, sans détruire le bâtiment.
-  sql(
-    `update public.reviews set echeance = current_date where owner = ${compte} and question_id in ${notion1}`,
-  );
+  await reglerRevisions(page, { notion: 'Notion 1', aujourdhui: true });
   await page.reload();
   await expect(batie).toContainText('Bâtiment construit, à revoir');
 

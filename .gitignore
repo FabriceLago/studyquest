@@ -5,7 +5,6 @@ experiments/model-test/resultats/
 experiments/model-test/relecture/
 app/dist/
 app/.angular/
-app/supabase/.temp/
 app/test-results/
 app/playwright-report/
 .omc/

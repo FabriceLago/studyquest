@@ -25,11 +25,5 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 240_000,
     },
-    // IA simulée, jointe par la fonction d'import : aucun appel réel, aucune dépense.
-    {
-      command: 'node e2e/ia-simulee.mjs',
-      url: 'http://127.0.0.1:54799',
-      reuseExistingServer: true,
-    },
   ],
 });

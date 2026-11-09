@@ -1,24 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { environment } from '../src/environments/environment';
-import { API, commencer, exigeSupabase, sansDefaut } from './aide';
+import { commencer, sansDefaut } from './aide';
 
-/** Parcours réels : demandent la pile locale (npm run db:start), ignorés sinon. */
-test("sans déclaration d'âge, l'API refuse la session, même sans passer par Bienvenue", async ({
-  request,
-}) => {
-  await exigeSupabase(request);
-  const reponse = await request.post(`${API}/auth/v1/signup`, {
-    headers: { apikey: environment.supabasePublishableKey },
-    data: { data: { pseudo: 'Lina' } },
-  });
-  expect(reponse.ok()).toBe(false);
-});
-
-test('commencer sans compte, garder sa progression, puis tout supprimer', async ({
-  page,
-  request,
-}) => {
-  await exigeSupabase(request);
+test('commencer sans compte, garder sa progression, puis tout supprimer', async ({ page }) => {
   test.setTimeout(120_000);
 
   await commencer(page);

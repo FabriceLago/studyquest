@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
+import { importer, commencer, repondreJuste, sansDefaut } from './aide';
 
 /** Parcours réels du second lot d'ajouts du 4 novembre, avec une IA simulée : aucune dépense. */
-test.beforeEach(async ({ request }, info) => {
-  test.skip(info.project.name !== 'mobile', 'Parcours lourds : sur mobile seulement');
-  await exigeSupabase(request);
+test.skip(({ isMobile }) => !isMobile, 'Parcours lourds : sur mobile seulement');
+test.beforeEach(() => {
   test.setTimeout(240_000);
 });
 
@@ -98,7 +97,6 @@ test('la fiche s’imprime sans le décor de l’application', async ({ page }) 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Biologie');
   await expect(page.getByRole('heading', { level: 2 })).toHaveCount(3);
   await expect(page.locator('.carte-fiche strong').first()).toHaveText('Recto');
-  await expect(page.getByText('La phrase 1 de ce cours')).toBeVisible();
   await sansDefaut(page);
 
   await page.getByRole('button', { name: 'Imprimer ou enregistrer en PDF' }).click();
@@ -112,78 +110,4 @@ test('la fiche s’imprime sans le décor de l’application', async ({ page }) 
     return [style.backgroundColor, style.color];
   });
   expect(couleurs).toEqual(['rgb(255, 255, 255)', 'rgb(0, 0, 0)']);
-});
-
-test('un duel se joue en différé, réservé à qui a reçu le cours', async ({ page, browser }) => {
-  const lectures: string[] = [];
-  page.on('response', async (r) => {
-    if (/rpc\/(jouer_duel|repondre_duel)/.test(r.url()))
-      lectures.push(await r.text().catch(() => ''));
-  });
-  await commencer(page);
-  await importer(page);
-  await page.getByRole('link', { name: /Biologie/ }).click();
-  const defier = page.getByRole('button', { name: 'Défier un ami sur ce cours' });
-  await expect(defier).toBeHidden();
-  await page.getByLabel(/j’ai le droit de le partager/).check();
-  await page.getByRole('button', { name: 'Obtenir un code' }).click();
-  await expect(defier).toBeVisible();
-  const codeCours = ((await page.locator('.code-partage').textContent()) ?? '').trim();
-  await defier.click();
-
-  await expect(page.getByRole('timer')).toHaveText(/^\s*[45]:\d\d\s*$/);
-  await expect(page.getByText('1/10')).toBeVisible();
-  await sansDefaut(page);
-  await repondreJuste(page);
-  await page.getByRole('button', { name: 'Question suivante' }).click();
-  for (let i = 2; i <= 10; i++) {
-    await expect(page.getByText(`${i}/10`)).toBeVisible();
-    await page.getByRole('button', { name: 'Passer cette question' }).click();
-  }
-  await expect(page.getByText('Duel terminé')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1, name: '1/10' })).toBeVisible();
-  await expect(page.locator('.liste-cours li')).toHaveCount(1);
-  const codeDuel = ((await page.locator('.code-partage').textContent()) ?? '').trim();
-  await sansDefaut(page);
-
-  const contexte = await browser.newContext({
-    baseURL: 'http://localhost:4221',
-    serviceWorkers: 'block',
-  });
-  const ami = await contexte.newPage();
-  await commencer(ami);
-  await ami.getByRole('link', { name: 'J’ai un code de duel' }).click();
-  await ami.getByLabel('Code du duel').fill(codeDuel);
-  await ami.getByRole('button', { name: 'Jouer le duel' }).click();
-  await expect(ami.getByRole('alert')).toContainText('recevoir ce cours');
-
-  await ami.goto('/cours/rejoindre');
-  await ami.getByLabel('Code du cours').fill(codeCours);
-  await ami.getByRole('button', { name: 'Recevoir le cours' }).click();
-  await expect(ami.getByText('12 questions prêtes')).toBeVisible();
-
-  await ami.goto('/duel/rejoindre');
-  await ami.getByLabel('Code du duel').fill(codeDuel.toLowerCase());
-  await ami.getByRole('button', { name: 'Jouer le duel' }).click();
-  for (let i = 1; i <= 10; i++) {
-    await expect(ami.getByText(`${i}/10`)).toBeVisible();
-    await ami.getByRole('button', { name: 'Passer cette question' }).click();
-  }
-  await expect(ami.getByRole('heading', { level: 1, name: '0/10' })).toBeVisible();
-  await expect(ami.locator('.liste-cours li')).toHaveText([
-    /1\. Joueur\s*1\/10/,
-    /2\. Joueur \(toi\)\s*0\/10/,
-  ]);
-  await contexte.close();
-
-  await page.goto('/');
-  await expect(page.getByText('0 / 100 XP vers le niveau 2')).toBeVisible();
-  const duel = page.locator('.liste-cours li', { hasText: '1/10, 2 joueurs' });
-  await expect(duel).toBeVisible();
-  await sansDefaut(page);
-  await duel.getByRole('link').click();
-  await expect(page.locator('.liste-cours li')).toHaveCount(2);
-
-  expect(lectures.length).toBeGreaterThan(0);
-  expect(lectures.join('')).not.toMatch(/correctes|"associations"|"ordre"|explication|extrait/);
 });

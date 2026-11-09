@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { SUPABASE } from '../supabase/supabase';
+import * as base from '../local/base';
+import { Store } from '../local/store';
 import { CoursVille } from '../ville/ville';
 
 export type Mission = 'reviser' | 'decouvrir' | 'defi';
@@ -95,36 +96,6 @@ export function messageNotionFaible({ notion, questions }: NotionFaible): string
     : `${questions} questions de « ${notion} » sont dans tes révisions du jour.`;
 }
 
-/** Soit le classement d'une partie terminée, soit les questions qui restent et le temps restant. */
-export interface PartieDuel {
-  readonly id: string;
-  readonly code: string;
-  readonly total: number;
-  readonly questions?: QuestionMission[];
-  readonly secondes?: number;
-  readonly classement?: readonly {
-    readonly pseudo: string;
-    readonly justes: number;
-    readonly moi: boolean;
-  }[];
-}
-
-export interface DuelRecent {
-  readonly id: string;
-  readonly titre: string;
-  readonly justes: number | null;
-  readonly total: number;
-  readonly joueurs: number;
-}
-
-export function messageDuel(code: string | undefined): string {
-  if (code === 'SQ404') return 'Ce code ne correspond à aucun duel.';
-  if (code === 'SQ403') return 'Pour jouer, il faut d’abord recevoir ce cours avec son code.';
-  if (code === 'SQ429') return 'Tu as atteint le nombre de duels possibles pour aujourd’hui.';
-  if (code === 'SQ409') return 'Ce cours ne permet pas de lancer un duel.';
-  return 'Le duel n’a pas pu démarrer. Réessaie plus tard.';
-}
-
 /** Ce que lit le mode écoute : l'énoncé et les choix, jamais une correction. */
 export function texteALire(q: Pick<QuestionMission, 'enonce' | 'presentation'>): string {
   const { options, gauche, droite, etapes } = q.presentation;
@@ -158,121 +129,55 @@ export function reponseDonnee(
   return { ordre };
 }
 
+/** Les missions, l'examen blanc et la ville, calculés dans ce navigateur (core/local/base.ts). */
 @Injectable({ providedIn: 'root' })
 export class SessionService {
-  private readonly client = inject(SUPABASE);
+  private readonly store = inject(Store);
 
   async journee(): Promise<Journee | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('mission_du_jour');
-    return data as Journee | null;
+    return base.missionDuJour(this.store.lire(), Date.now());
   }
 
   /** Null si la mission n'est pas possible, par exemple un défi avant 5 questions vues. */
   async questions(
     mission: Mission,
   ): Promise<{ questions: QuestionMission[]; secondes?: number } | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('questions_mission', { p_mission: mission });
-    return data;
+    return this.store.modifier((e) => base.questionsMission(e, mission, Date.now()));
   }
 
-  /** Null si le serveur n'a pas pu être joint : la réponse peut être renvoyée. */
   async repondre(question: string, mission: Mission, reponse: Reponse): Promise<Resultat | null> {
-    const supabase = await this.client;
-    const { data, error } = await supabase.rpc('submit_answer', {
-      p_question: question,
-      p_mission: mission,
-      p_reponse: reponse,
-    });
-    return error ? null : data;
+    return this.store.modifier((e) => base.repondre(e, question, mission, reponse, Date.now()));
   }
 
   async demarrerExamen(cours: string): Promise<ExamenBlanc | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('demarrer_examen', { p_cours: cours });
-    return data;
+    return this.store.modifier((e) => base.demarrerExamen(e, cours, Date.now()));
   }
 
-  /** False si le serveur refuse, par exemple après la fin du temps ; null s'il n'a pas répondu. */
+  /** False si la réponse arrive après la fin du temps. */
   async repondreExamen(
     examen: string,
     question: string,
     reponse: Reponse,
   ): Promise<boolean | null> {
-    const supabase = await this.client;
-    const { data, error } = await supabase.rpc('repondre_examen', {
-      p_examen: examen,
-      p_question: question,
-      p_reponse: reponse,
-    });
-    return error ? null : data;
+    return this.store.modifier((e) =>
+      base.repondreExamen(e, examen, question, reponse, Date.now()),
+    );
   }
 
   async rendreExamen(examen: string): Promise<ScoreExamen | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('rendre_examen', { p_examen: examen });
-    return data;
+    return this.store.modifier((e) => base.rendreExamen(e, examen));
   }
 
   async reviserNotionFaible(examen: string): Promise<NotionFaible | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('reviser_notion_faible', { p_examen: examen });
-    return data;
+    return this.store.modifier((e) => base.reviserNotionFaible(e, examen, Date.now()));
   }
 
-  async creerDuel(cours: string): Promise<{ id: string } | { erreur: string }> {
-    const supabase = await this.client;
-    const { data, error } = await supabase.rpc('creer_duel', { p_cours: cours });
-    return error ? { erreur: messageDuel(error.code) } : { id: data };
-  }
-
-  async rejoindreDuel(code: string): Promise<{ id: string } | { erreur: string }> {
-    const supabase = await this.client;
-    const { data, error } = await supabase.rpc('rejoindre_duel', { p_code: code });
-    return error ? { erreur: messageDuel(error.code) } : { id: data };
-  }
-
-  /** Null si le duel n'est pas accessible à ce compte. */
-  async jouerDuel(duel: string): Promise<PartieDuel | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('jouer_duel', { p_duel: duel });
-    return data;
-  }
-
-  /** False si le serveur refuse, par exemple après la fin du temps ; null s'il n'a pas répondu. */
-  async repondreDuel(duel: string, question: string, reponse: Reponse): Promise<boolean | null> {
-    const supabase = await this.client;
-    const { data, error } = await supabase.rpc('repondre_duel', {
-      p_duel: duel,
-      p_question: question,
-      p_reponse: reponse,
-    });
-    return error ? null : data;
-  }
-
-  async terminerDuel(duel: string): Promise<PartieDuel | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('terminer_duel', { p_duel: duel });
-    return data;
-  }
-
-  async mesDuels(): Promise<DuelRecent[]> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('mes_duels');
-    return data ?? [];
-  }
-
-  /** Un quartier par cours prêt, avec l'état de chaque notion (spécification § 3). */
+  /** Un quartier par cours, avec l'état de chaque notion (spécification § 3). */
   async maVille(): Promise<CoursVille[]> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('ma_ville');
-    return data ?? [];
+    return base.maVille(this.store.lire(), Date.now());
   }
 
   async terminerDefi(): Promise<BilanDefi | null> {
-    const supabase = await this.client;
-    const { data } = await supabase.rpc('terminer_defi');
-    return data;
+    return this.store.modifier((e) => base.terminerDefi(e, Date.now()));
   }
 }

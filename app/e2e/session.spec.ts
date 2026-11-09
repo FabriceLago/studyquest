@@ -1,11 +1,9 @@
-import { execFileSync } from 'node:child_process';
 import { Page, expect, test } from '@playwright/test';
-import { chiffres, exigeSupabase, importer, commencer, repondreJuste, sansDefaut } from './aide';
+import { chiffres, importer, commencer, reglerRevisions, repondreJuste, sansDefaut } from './aide';
 
-/** Parcours réel avec Supabase, la fonction d'import et une IA simulée (e2e/ia-simulee.mjs). */
-test.beforeEach(async ({ request }, info) => {
-  test.skip(info.project.name !== 'mobile', 'Parcours lourds : sur mobile seulement');
-  await exigeSupabase(request);
+/** Parcours complet, sur un cours placé dans le stockage local (aide.ts). */
+test.skip(({ isMobile }) => !isMobile, 'Parcours lourds : sur mobile seulement');
+test.beforeEach(() => {
   test.setTimeout(240_000);
 });
 
@@ -23,28 +21,10 @@ async function repondreAToutes(page: Page, nombre: number) {
   }
 }
 
-/** Avance le temps : rend dues toutes les questions vues par ce compte. */
-function rendreDues(email: string) {
-  execFileSync('docker', [
-    'exec',
-    'supabase_db_studyquest',
-    'psql',
-    '-U',
-    'postgres',
-    '-c',
-    `update public.reviews set echeance = current_date - 1 where owner = '${email}'`,
-  ]);
-}
-
 test('une journée complète : découvrir, défi, réviser, sans jamais recevoir de réponse à l’avance', async ({
   page,
 }) => {
-  const lectures: string[] = [];
-  page.on('response', async (r) => {
-    if (/rpc\/(questions_mission|mission_du_jour)/.test(r.url()))
-      lectures.push(await r.text().catch(() => ''));
-  });
-  const email = await commencer(page);
+  await commencer(page);
   await expect(page.getByText('Ta ville est encore vide')).toBeVisible();
   await expect(page.getByText('Mission du jour')).toBeHidden();
   await importer(page);
@@ -89,7 +69,7 @@ test('une journée complète : découvrir, défi, réviser, sans jamais recevoir
   await expect(page.getByText('Mission terminée. À demain !')).toBeVisible();
 
   // Le lendemain : les 8 questions sont dues.
-  rendreDues(email);
+  await reglerRevisions(page);
   await page.reload();
   await expect(page.getByRole('link', { name: /Réviser.*8 questions à revoir/ })).toBeVisible();
   await page.getByRole('link', { name: 'Commencer ma révision' }).click();
@@ -98,9 +78,6 @@ test('une journée complète : découvrir, défi, réviser, sans jamais recevoir
   await page.getByRole('link', { name: 'Retour à ma journée' }).click();
   await expect(page.getByText('Niveau 2')).toBeVisible();
   await expect(page.getByText('96 / 300 XP vers le niveau 3')).toBeVisible();
-
-  expect(lectures.length).toBeGreaterThan(0);
-  expect(lectures.join('')).not.toMatch(/correctes|"associations"|"ordre"|explication|extrait/);
 });
 
 test('une erreur est corrigée, et une question fausse peut être retirée', async ({ page }) => {
@@ -113,7 +90,6 @@ test('une erreur est corrigée, et une question fausse peut être retirée', asy
   const retour = page.getByRole('status');
   await expect(retour).toContainText('À revoir, elle reviendra demain');
   await expect(retour).toContainText('Le cours le dit.');
-  await expect(retour).toContainText('Dans ton cours, Biologie');
   await expect(page.getByRole('button', { name: /Bonne.*Bonne réponse/ })).toBeDisabled();
   await expect(page.getByRole('button', { name: /Fausse.*Ta réponse/ })).toBeDisabled();
   await sansDefaut(page);

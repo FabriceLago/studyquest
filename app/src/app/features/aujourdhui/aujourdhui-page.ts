@@ -1,9 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { Cours, CoursService, Statut, libelleExamen } from '../../core/cours/cours.service';
+import { Cours, CoursService, libelleExamen } from '../../core/cours/cours.service';
 import {
-  DuelRecent,
   Journee,
   SessionService,
   niveau,
@@ -12,16 +11,6 @@ import {
 import { CoursVille } from '../../core/ville/ville';
 import { Avatar } from '../../shared/avatar';
 import { CarteVille } from '../ville/carte-ville';
-import { environment } from '../../../environments/environment';
-
-const ETATS: Record<Statut, string> = {
-  en_attente: 'En préparation',
-  transcription: 'En lecture',
-  a_relire: 'À relire',
-  generation: 'Questions en création',
-  pret: 'Prêt',
-  echec: 'Échec',
-};
 
 /** Page d'arrivée : la mission du jour et l'aperçu de la ville. */
 @Component({
@@ -123,8 +112,8 @@ const ETATS: Record<Statut, string> = {
       <p class="intro">
         {{
           cours().length === 0
-            ? 'Ta ville est encore vide. Importe ton premier cours pour la lancer.'
-            : 'Aucune mission pour l’instant. Importe un cours pour en débloquer.'
+            ? 'Ta ville est encore vide. Écris ton premier cours pour la lancer.'
+            : 'Aucune mission pour l’instant. Écris un cours pour en débloquer.'
         }}
       </p>
     }
@@ -132,44 +121,16 @@ const ETATS: Record<Statut, string> = {
       class="btn bloc"
       [class.btn-primary]="lignes().length === 0"
       [class.btn-secondary]="lignes().length > 0"
-      routerLink="/cours/importer"
-      >Importer un cours</a
+      routerLink="/cours/ecrire"
+      >Écrire un cours</a
     >
-    @if (charge() && cours().length === 0) {
-      <p class="bloc"><a routerLink="/cours/ecrire">Écrire mes questions moi-même</a></p>
-    }
-    <p class="bloc"><a routerLink="/cours/rejoindre">J’ai un code de cours</a></p>
-    <p class="bloc"><a routerLink="/duel/rejoindre">J’ai un code de duel</a></p>
-    <p class="bloc"><a routerLink="/groupes">Mes groupes et classements</a></p>
-    @if (quota(); as q) {
-      <p class="hint bloc">
-        {{ q.pretes }} {{ q.pretes > 1 ? 'imports' : 'import' }} sur {{ q.total }} ce mois-ci.
-        @if (paiement) {
-          <a routerLink="/abonnement">Abonnement</a>
-        }
-      </p>
-    }
-    @if (duels().length > 0) {
-      <h2 class="bloc">Mes duels</h2>
-      <ul class="liste-cours">
-        @for (d of duels(); track d.id) {
-          <li>
-            <a [routerLink]="['/duel', d.id]">{{ d.titre }}</a>
-            <span class="hint"
-              >{{ d.justes ?? 0 }}/{{ d.total }}, {{ d.joueurs }}
-              {{ d.joueurs > 1 ? 'joueurs' : 'joueur' }}</span
-            >
-          </li>
-        }
-      </ul>
-    }
     @if (cours().length > 0) {
       <h2 class="bloc">Mes cours</h2>
       <ul class="liste-cours">
         @for (c of cours(); track c.id) {
           <li>
             <a [routerLink]="['/cours', c.id]">{{ c.titre }}</a>
-            <span class="hint">{{ examen(c.date_examen) || etat(c.statut) }}</span>
+            <span class="hint">{{ examen(c.date_examen) }}</span>
           </li>
         }
       </ul>
@@ -181,13 +142,9 @@ export class AujourdhuiPage implements OnInit {
   private readonly service = inject(CoursService);
   private readonly session = inject(SessionService);
   protected readonly cours = signal<Cours[]>([]);
-  protected readonly quota = signal<{ pretes: number; total: number } | null>(null);
   protected readonly journee = signal<Journee | null>(null);
-  protected readonly duels = signal<DuelRecent[]>([]);
   protected readonly ville = signal<CoursVille[]>([]);
   protected readonly charge = signal(false);
-  protected readonly paiement = environment.paiement;
-  protected etat = (statut: Statut) => ETATS[statut];
   protected examen = (date: string | null) => libelleExamen(date);
 
   protected readonly niveauActuel = computed(() => niveau(this.journee()?.xp_total ?? 0));
@@ -235,17 +192,13 @@ export class AujourdhuiPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const [cours, quota, journee, duels, ville] = await Promise.all([
+    const [cours, journee, ville] = await Promise.all([
       this.service.liste(),
-      this.service.quota(),
       this.session.journee(),
-      this.session.mesDuels(),
       this.session.maVille(),
     ]);
     this.cours.set(cours);
-    this.quota.set(quota);
     this.journee.set(journee);
-    this.duels.set(duels);
     this.ville.set(ville);
     this.charge.set(true);
   }

@@ -1,9 +1,8 @@
 import { Locator, Page, expect, test } from '@playwright/test';
-import { exigeSupabase, commencer, sansDefaut } from './aide';
+import { commencer, sansDefaut } from './aide';
 
 /** Ajout du 7 novembre : un cours écrit à la main, sans IA ni quota, joué comme les autres. */
-test.beforeEach(async ({ request }) => {
-  await exigeSupabase(request);
+test.beforeEach(async () => {
   test.setTimeout(180_000);
 });
 
@@ -29,12 +28,12 @@ async function vraiFaux(question: Locator, enonce: string) {
 
 test('écrire un cours à la main, le jouer, puis lui ajouter une notion', async ({ page }) => {
   await commencer(page);
+  // L'ancienne adresse d'import mène au formulaire.
   await page.goto('/cours/importer');
-  await expect(page.getByRole('link', { name: 'Écrire mes questions moi-même' })).toBeVisible();
+  await expect(page).toHaveURL(/\/cours\/ecrire$/);
 
-  // Sans aucun cours, Aujourd'hui propose aussi d'écrire ses questions.
   await page.goto('/');
-  await page.getByRole('link', { name: 'Écrire mes questions moi-même' }).click();
+  await page.getByRole('link', { name: 'Écrire un cours' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Écrire mes questions' })).toBeVisible();
   await sansDefaut(page);
 
@@ -75,8 +74,6 @@ test('écrire un cours à la main, le jouer, puis lui ajouter une notion', async
   await page.getByRole('button', { name: 'Enregistrer le cours' }).click();
   await expect(page.getByText('3 questions prêtes.', { exact: true })).toBeVisible();
   const adresse = page.url();
-  await expect(page.getByText('Retire celles')).toHaveCount(0);
-  await expect(page.locator('blockquote')).toHaveCount(0);
   await expect(page.getByText('Carte : Révolution → 1789 : prise de la Bastille.')).toBeVisible();
   await sansDefaut(page);
 

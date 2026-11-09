@@ -1,12 +1,11 @@
-import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { CAPTCHA_PENDING, Captcha } from '../../shared/captcha/captcha';
 
-/** Utilisation libre : ni compte ni e-mail, une déclaration d'âge puis une session anonyme. */
+/** Ni compte ni e-mail : une déclaration d'âge, puis tout reste dans ce navigateur. */
 @Component({
   selector: 'sq-bienvenue-page',
-  imports: [RouterLink, Captcha],
+  imports: [RouterLink],
   template: `
     <h1>Bienvenue sur StudyQuest</h1>
     <p class="intro">
@@ -28,7 +27,6 @@ import { CAPTCHA_PENDING, Captcha } from '../../shared/captcha/captcha';
         Ta progression est gardée pour ce navigateur, sur cet appareil. Si tu effaces les données du
         navigateur ou changes d’appareil, tu repars de zéro.
       </p>
-      <sq-captcha />
       @if (erreur()) {
         <p id="erreur" class="field-error" role="alert">{{ erreur() }}</p>
       }
@@ -46,7 +44,6 @@ import { CAPTCHA_PENDING, Captcha } from '../../shared/captcha/captcha';
 export class BienvenuePage implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly captcha = viewChild(Captcha);
   protected readonly age = signal(false);
   protected readonly erreur = signal('');
   protected readonly envoi = signal(false);
@@ -64,15 +61,9 @@ export class BienvenuePage implements OnInit {
       this.erreur.set('StudyQuest est réservé aux personnes de 15 ans et plus.');
       return;
     }
-    const captchaToken = this.captcha()?.take();
-    if (captchaToken === null) {
-      this.erreur.set(CAPTCHA_PENDING);
-      return;
-    }
     this.envoi.set(true);
-    const resultat = await this.auth.commencer(captchaToken);
+    const resultat = await this.auth.commencer();
     this.envoi.set(false);
-    this.captcha()?.reset();
     if (resultat.ok) await this.router.navigateByUrl('/');
     else this.erreur.set(resultat.message);
   }
